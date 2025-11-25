@@ -1,0 +1,36 @@
+{
+  "name": "@ethicalzen/accelerator-financial-banking",
+  "version": "1.0.0",
+  "description": "PCI-DSS compliant banking chatbot with EthicalZen security",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js",
+    "dev": "nodemon app/server.js",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "financial",
+    "banking",
+    "pci-dss",
+    "ai-safety",
+    "llm-security",
+    "ethicalzen"
+  ],
+  "author": "EthicalZen",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

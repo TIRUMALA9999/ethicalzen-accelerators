@@ -1,0 +1,54 @@
+{
+  "name": "ethicalzen-healthcare-accelerator",
+  "version": "1.0.0",
+  "description": "HIPAA-compliant AI patient portal with EthicalZen security",
+  "main": "app/server.js",
+  "scripts": {
+    "start": "node app/server.js",
+    "dev": "nodemon app/server.js",
+    "test": "jest",
+    "test:positive": "jest tests/positive.test.js",
+    "test:negative": "jest tests/negative.test.js",
+    "test:verbose": "jest --verbose",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": [
+    "healthcare",
+    "hipaa",
+    "ai-safety",
+    "llm-security",
+    "patient-portal",
+    "ethicalzen"
+  ],
+  "author": "EthicalZen",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ethicalzen-accelerators/healthcare-patient-portal"
+  },
+  "bugs": {
+    "url": "https://github.comicalzen-accelerators/healthcare-patient-portal/issues"
+  },
+  "homepage": "https://github.com/ethicalzen-accelerators/healthcare-patient-portal#readme"
+}
+

@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  # Healthcare app - builds from source (you have full code)
+  app:
+    build: .
+    container_name: healthcare-portal
+    ports:
+      - "3000:3000"
+    environment:
+      - ETHICALZEN_GATEWAY_URL=http://gateway:8080
+      - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY:-sk-demo-public-playground-ethicalzen}
+      - ETHICALZEN_CERTIFICATE_ID=${ETHICALZEN_CERTIFICATE_ID:-Healthcare Patient Portal Demo/healthcare/us/v1.0}
+      - ETHICALZEN_TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
+      - ETHICALZEN_PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      
+      # Your LLM Provider (BYOK - Bring Your Own Key)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-groq}
+      - LLM_MODEL=${LLM_MODEL:-llama-3.3-70b-versatile}
+      
+      # Application Settings
+      - PORT=3000
+      - NODE_ENV=${NODE_ENV:-production}
+      - USE_CASE=${USE_CASE:-patient-portal}
+      - INDUSTRY=${INDUSTRY:-healthcare}
+      - REGION=${REGION:-us}
+      - DATA_SENSITIVITY=${DATA_SENSITIVITY:-PHI,PII}
+    depends_on:
+      gateway:
+        condition: service_healthy
+      metrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+  # EthicalZen Gateway - uses pre-built image (proprietary)
+  gateway:
+    image: ethicalzen/acvps-gateway:v1.0
+    container_name: acvps-gateway-local
+    ports:
+      - "8080:8080"
+    environment:
+      - BACKEND_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - API_KEY=${ETHICALZEN_API_KEY:-sk-demo-public-playground-ethicalzen}
+      - TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
+      - PORT=8080
+      - MODE=cloud
+      - LOG_LEVEL=info
+      - SYNC_ENABLED=true
+      - SYNC_INTERVAL=60
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+  # Metrics Service - uses pre-built image (proprietary)
+  metrics:
+    image: ethicalzen/metrics-service:v1.0
+    container_name: metrics-service-local
+    ports:
+      - "9090:9090"
+    environment:
+      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - API_KEY=${ETHICALZEN_API_KEY:-sk-test-local-key}
+      - TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
+      - PORT=9090
+      - FORWARD_INTERVAL=60
+      - BATCH_SIZE=100
+      - DB_PATH=/data/metrics.db
+    volumes:
+      - metrics-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:9090/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - healthcare-network
+    restart: unless-stopped
+
+networks:
+  healthcare-network:
+    driver: bridge
+
+volumes:
+  metrics-data:
+

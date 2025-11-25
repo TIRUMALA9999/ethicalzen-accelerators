@@ -1,0 +1,41 @@
+{
+  "name": "Legal Document Assistant",
+  "description": "AI assistant for legal document review and analysis",
+  "version": "1.0.0",
+  "use_case": "legal-assistant",
+  "industry": "legal",
+  "region": "us",
+  "data_sensitivity": ["Attorney_Client_Privilege", "PII", "Confidential_Documents"],
+  "guardrails": [
+    {
+      "id": "prompt_injection_detector_v1",
+      "enabled": true,
+      "description": "Blocks manipulation attempts",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "legal_advice_blocker_v1",
+      "enabled": true,
+      "description": "Prevents unauthorized legal advice",
+      "threshold": 0.1,
+      "action": "block"
+    },
+    {
+      "id": "confidentiality_protector_v1",
+      "enabled": true,
+      "description": "Protects attorney-client privilege",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "pii_detector_v1",
+      "enabled": true,
+      "description": "Prevents PII leakage",
+      "threshold": 0.9,
+      "action": "block"
+    }
+  ],
+  "compliance_frameworks": ["Attorney-Client Privilege", "GDPR", "SOC 2"],
+  "system_prompt_template": "You are a helpful legal assistant. Provide general legal information but never specific legal advice. Always recommend consulting a licensed attorney for specific cases."
+}

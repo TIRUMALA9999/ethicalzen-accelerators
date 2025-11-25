@@ -1,0 +1,64 @@
+{
+  "name": "Financial Banking Chatbot",
+  "description": "PCI-DSS compliant AI chatbot for banking customer service",
+  "version": "1.0.0",
+  
+  "use_case": "banking-support",
+  "industry": "financial",
+  "region": "us",
+  "data_sensitivity": ["PCI", "PII", "Account_Numbers", "Financial_Data"],
+  
+  "guardrails": [
+    {
+      "id": "prompt_injection_detector_v1",
+      "enabled": true,
+      "description": "Blocks attempts to manipulate the AI system",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "pci_compliance_v1",
+      "enabled": true,
+      "description": "Prevents exposure of payment card information and account numbers",
+      "threshold": 0.9,
+      "action": "block"
+    },
+    {
+      "id": "financial_advice_blocker_v1",
+      "enabled": true,
+      "description": "Prevents unauthorized investment or financial advice",
+      "threshold": 0.1,
+      "action": "block"
+    },
+    {
+      "id": "pii_detector_v1",
+      "enabled": true,
+      "description": "Detects and prevents leakage of Personally Identifiable Information",
+      "threshold": 0.9,
+      "action": "block"
+    }
+  ],
+  
+  "failover_profile": "strict",
+  
+  "monitoring": {
+    "audit_logging": true,
+    "metrics_collection": true,
+    "alert_on_violations": true
+  },
+  
+  "compliance_frameworks": [
+    "PCI-DSS",
+    "GDPR",
+    "SOC 2",
+    "GLBA"
+  ],
+  
+  "system_prompt_template": "You are a helpful banking assistant. You can:\n- Answer general questions about banking services\n- Help with account information lookup\n- Explain transaction processes\n- Provide information about fees and rates\n\nYou MUST NOT:\n- Provide specific investment or financial advice\n- Share account numbers or sensitive financial data\n- Process transactions or transfers\n- Override security policies",
+  
+  "custom_rules": {
+    "max_tokens": 500,
+    "temperature": 0.7,
+    "response_timeout_ms": 30000
+  }
+}
