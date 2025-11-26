@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create ACVPS Icons</title>
+</head>
+<body>
+    <canvas id="canvas16" width="16" height="16"></canvas>
+    <canvas id="canvas48" width="48" height="48"></canvas>
+    <canvas id="canvas128" width="128" height="128"></canvas>
+    
+    <script>
+        function createIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // White border
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = size / 16;
+            ctx.strokeRect(size / 16, size / 16, size - size / 8, size - size / 8);
+            
+            // Lock icon (simplified)
+            ctx.fillStyle = 'white';
+            const lockSize = size * 0.6;
+            const x = (size - lockSize) / 2;
+            const y = (size - lockSize) / 2;
+            
+            // Lock body
+            ctx.fillRect(x + lockSize * 0.2, y + lockSize * 0.4, lockSize * 0.6, lockSize * 0.5);
+            
+            // Lock shackle
+            ctx.beginPath();
+            ctx.arc(x + lockSize / 2, y + lockSize * 0.35, lockSize * 0.25, Math.PI, 0, true);
+            ctx.lineWidth = size / 20;
+            ctx.strokeStyle = 'white';
+            ctx.stroke();
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `icon${size}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Create all icons
+        setTimeout(() => {
+            createIcon('canvas16', 16);
+            createIcon('canvas48', 48);
+            createIcon('canvas128', 128);
+        }, 100);
+    </script>
+</body>
+</html>

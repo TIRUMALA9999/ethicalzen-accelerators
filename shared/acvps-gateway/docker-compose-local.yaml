@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  gateway:
+    container_name: acvps-gateway-local
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.local
+    ports:
+      - "8443:8443"  # Gateway port
+      - "9090:9090"  # Metrics port
+    environment:
+      # Gateway Mode
+      - GATEWAY_MODE=local
+      
+      # Authentication (E2E Test)
+      - GATEWAY_API_KEY=gw_3801a0503555f3bdd0225221fb78fd9a7fa20751751c6e3a5b9404e433175772
+      - GATEWAY_TENANT_ID=default
+      
+      # Control Plane URL
+      - CONTROL_PLANE_URL=https://ethicalzen-backend-400782183161.us-central1.run.app
+      
+      # Backend URL (your local service)
+      - BACKEND_URL=http://host.docker.internal:4500
+      
+      # Optional: Local Redis for caching (comment out if not using)
+      # - REDIS_ADDR=redis:6379
+      
+      # Telemetry
+      - TELEMETRY_ENABLED=true
+      - TELEMETRY_BACKEND_URL=http://metrics-service:8090
+      - TELEMETRY_BATCH_SIZE=100
+      - TELEMETRY_FLUSH_INTERVAL=10s
+      
+      # Platform Guardrails
+      - GUARDRAIL_REPO_PATH=/app/guardrail_repo
+      
+      # Blockchain (disabled)
+      - BLOCKCHAIN_ENABLED=false
+      
+      # Validation
+      - VALIDATION_MODE=enforce
+    networks:
+      - ethicalzen-local
+
+  metrics-service:
+    container_name: ethicalzen-metrics-local
+    build:
+      context: ../metrics-service
+      dockerfile: Dockerfile
+    ports:
+      - "8090:8090"
+    environment:
+      - NODE_ENV=development
+      - PORT=8090
+      - DB_TYPE=sqlite
+      - DB_PATH=/data/metrics.db
+      - BACKEND_URL=https://ethicalzen-backend-400782183161.us-central1.run.app
+      - BACKEND_FORWARD_ENABLED=false
+    volumes:
+      - metrics-data:/data
+    networks:
+      - ethicalzen-local
+
+networks:
+  ethicalzen-local:
+    driver: bridge
+
+volumes:
+  metrics-data:

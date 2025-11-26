@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACVPS Gateway - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(88, 152, 247, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Header */
+        header {
+            margin-bottom: 60px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #a0a0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #9090b0;
+            font-weight: 400;
+        }
+        
+        /* Cards Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .card {
+            background: rgba(20, 20, 35, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(120, 119, 198, 0.05) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .card:hover {
+            border-color: rgba(120, 119, 198, 0.3);
+            transform: translateY(-4px);
+        }
+        
+        .card:hover::before {
+            opacity: 1;
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #7877c6 0%, #5898f7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        /* Status Indicator */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.offline {
+            background: #ef4444;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+            animation: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        /* Metrics */
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: #9090b0;
+            font-size: 0.95rem;
+        }
+        
+        .metric-value {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #ffffff;
+        }
+        
+        /* Big Number Display */
+        .big-number {
+            text-align: center;
+            margin: 24px 0;
+        }
+        
+        .big-number-value {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #7877c6 0%, #5898f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+        
+        .big-number-label {
+            font-size: 0.9rem;
+            color: #9090b0;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Buttons */
+        button {
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #7877c6 0%, #5898f7 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #5898f7 0%, #7877c6 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        button:hover::before {
+            opacity: 1;
+        }
+        
+        button span {
+            position: relative;
+            z-index: 1;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(120, 119, 198, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        
+        .badge.offline {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        .badge.warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+        
+        /* Test Result */
+        .test-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(10, 10, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+            color: #a0a0ff;
+            line-height: 1.6;
+        }
+        
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #7877c6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Contract List */
+        .contract-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .contract-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(10, 10, 20, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .contract-item:hover {
+            background: rgba(120, 119, 198, 0.1);
+            border-color: rgba(120, 119, 198, 0.3);
+        }
+        
+        .contract-name {
+            font-size: 0.9rem;
+            color: #e0e0ff;
+        }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(120, 119, 198, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(120, 119, 198, 0.7);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .big-number-value {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ACVPS Gateway</h1>
+            <p class="subtitle">Real-time monitoring and deterministic contract enforcement</p>
+        </header>
+        
+        <div class="grid">
+            <!-- Gateway Health -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔒</div>
+                    <div>
+                        <div class="card-title">Gateway Status</div>
+                    </div>
+                    <div class="status-indicator">
+                        <span class="status-dot" id="status-dot"></span>
+                    </div>
+                </div>
+                
+                <div class="metric">
+                    <span class="metric-label">Health</span>
+                    <span class="metric-value" id="health-status">Checking...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Port</span>
+                    <span class="metric-value">8081</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Uptime</span>
+                    <span class="metric-value" id="uptime">-</span>
+                </div>
+            </div>
+            
+            <!-- Cache Performance -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💾</div>
+                    <div class="card-title">Redis Cache</div>
+                </div>
+                
+                <div class="metric">
+                    <span class="metric-label">Status</span>
+                    <span class="metric-value" id="redis-status">Checking...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Contracts Cached</span>
+                    <span class="metric-value" id="contracts-cached">-</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Connection</span>
+                    <span class="metric-value">localhost:6379</span>
+                </div>
+            </div>
+            
+            <!-- Request Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📊</div>
+                    <div class="card-title">Request Statistics</div>
+                </div>
+                
+                <div class="big-number">
+                    <div class="big-number-value" id="total-requests">0</div>
+                    <div class="big-number-label">Total Proxied</div>
+                </div>
+                
+                <div class="metric">
+                    <span class="metric-label">Feature Extraction</span>
+                    <span class="metric-value" id="feature-requests">0</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Blocked</span>
+                    <span class="metric-value" id="blocked-requests">0</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="grid">
+            <!-- Loaded Contracts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📜</div>
+                    <div class="card-title">Active Contracts</div>
+                </div>
+                
+                <div class="big-number">
+                    <div class="big-number-value">6</div>
+                    <div class="big-number-label">Loaded</div>
+                </div>
+                
+                <div class="contract-list">
+                    <div class="contract-item">
+                        <span class="contract-name">Healthcare (Intake)</span>
+                        <span class="badge">Active</span>
+                    </div>
+                    <div class="contract-item">
+                        <span class="contract-name">Healthcare (Symptoms)</span>
+                        <span class="badge">Active</span>
+                    </div>
+                    <div class="contract-item">
+                        <span class="contract-name">Finance (Profile)</span>
+                        <span class="badge">Active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Services Status -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🚀</div>
+                    <div class="card-title">Running Services</div>
+                </div>
+                
+                <div class="metric">
+                    <span class="metric-label">ACVPS Gateway</span>
+                    <span class="badge" id="gateway-badge">
+                        <span class="loading"></span>
+                        Checking
+                    </span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Mock AI Service</span>
+                    <span class="badge" id="mock-badge">
+                        <span class="loading"></span>
+                        Checking
+                    </span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Redis Cache</span>
+                    <span class="badge" id="redis-badge">
+                        <span class="loading"></span>
+                        Checking
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Test Panel -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🧪</div>
+                    <div class="card-title">Test Gateway</div>
+                </div>
+                
+                <button onclick="testHealth()">
+                    <span>Health Check</span>
+                </button>
+                <button onclick="testProxy()">
+                    <span>Test Proxy</span>
+                </button>
+                <button onclick="testFeatureExtraction()">
+                    <span>Test Feature Extraction</span>
+                </button>
+                
+                <div class="test-result" id="test-result" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let startTime = Date.now();
+        let requestCount = 0;
+        
+        async function checkService(url, badgeId) {
+            try {
+                const response = await fetch(url, { timeout: 3000 });
+                if (response.ok) {
+                    const badge = document.getElementById(badgeId);
+                    badge.className = 'badge';
+                    badge.innerHTML = '✓ Online';
+                    return true;
+                }
+            } catch (error) {
+                const badge = document.getElementById(badgeId);
+                badge.className = 'badge offline';
+                badge.innerHTML = '✗ Offline';
+                return false;
+            }
+        }
+        
+        async function fetchHealth() {
+            const gatewayOk = await checkService('http://localhost:8081/health', 'gateway-badge');
+            const mockOk = await checkService('http://localhost:3001/health', 'mock-badge');
+            const redisOk = await checkService('http://localhost:8081/health', 'redis-badge');
+            
+            if (gatewayOk) {
+                document.getElementById('health-status').textContent = 'Online';
+                document.getElementById('status-dot').className = 'status-dot';
+                document.getElementById('redis-status').textContent = '✓ Connected';
+                document.getElementById('contracts-cached').textContent = '6';
+            } else {
+                document.getElementById('health-status').textContent = 'Offline';
+                document.getElementById('status-dot').className = 'status-dot offline';
+                document.getElementById('redis-status').textContent = '✗ Disconnected';
+            }
+        }
+        
+        function updateUptime() {
+            const seconds = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            
+            if (hours > 0) {
+                document.getElementById('uptime').textContent = `${hours}h ${minutes % 60}m`;
+            } else if (minutes > 0) {
+                document.getElementById('uptime').textContent = `${minutes}m ${seconds % 60}s`;
+            } else {
+                document.getElementById('uptime').textContent = `${seconds}s`;
+            }
+        }
+        
+        async function testHealth() {
+            const result = document.getElementById('test-result');
+            result.style.display = 'block';
+            result.textContent = '→ Testing gateway health...\n';
+            
+            try {
+                const response = await fetch('http://localhost:8081/health');
+                const data = await response.text();
+                result.textContent += '\n✓ Success!\n\n' + data;
+            } catch (error) {
+                result.textContent += '\n✗ Error: ' + error.message;
+            }
+        }
+        
+        async function testProxy() {
+            const result = document.getElementById('test-result');
+            result.style.display = 'block';
+            result.textContent = '→ Testing proxy through gateway...\n';
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/diagnose', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-DC-ID': 'medical-diagnosis/healthcare/us/v1.0',
+                        'X-Trace-ID': 'dashboard-test-' + Date.now()
+                    },
+                    body: JSON.stringify({ symptoms: ['fever', 'cough'] })
+                });
+                
+                const data = await response.json();
+                result.textContent += '\n✓ Success!\n\n' + JSON.stringify(data, null, 2);
+                requestCount++;
+                document.getElementById('total-requests').textContent = requestCount;
+            } catch (error) {
+                result.textContent += '\n✗ Error: ' + error.message;
+            }
+        }
+        
+        async function testFeatureExtraction() {
+            const result = document.getElementById('test-result');
+            result.style.display = 'block';
+            result.textContent = '→ Testing feature extraction with PII...\n';
+            
+            try {
+                const response = await fetch('http://localhost:8081/api/proxy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-DC-ID': 'intake/healthcare/us/v1.0',
+                        'X-Trace-ID': 'dashboard-pii-test-' + Date.now()
+                    },
+                    body: JSON.stringify({
+                        symptoms: ['fever'],
+                        include_pii: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.status === 409) {
+                    result.textContent += '\n✓ Feature extraction working!\n';
+                    result.textContent += '✓ PII was detected and blocked:\n\n';
+                    result.textContent += JSON.stringify(data, null, 2);
+                } else {
+                    result.textContent += '\n✓ Response:\n\n' + JSON.stringify(data, null, 2);
+                }
+                
+                requestCount++;
+                document.getElementById('total-requests').textContent = requestCount;
+            } catch (error) {
+                result.textContent += '\n✗ Error: ' + error.message;
+            }
+        }
+        
+        // Auto-refresh every 3 seconds
+        setInterval(() => {
+            fetchHealth();
+            updateUptime();
+        }, 3000);
+        
+        // Initial load
+        fetchHealth();
+        updateUptime();
+    </script>
+</body>
+</html>

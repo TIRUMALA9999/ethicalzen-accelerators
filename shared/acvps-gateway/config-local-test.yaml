@@ -1,0 +1,85 @@
+# ACVPS Gateway - Local Test Configuration
+# For feature extraction testing with mock AI service
+
+gateway:
+  name: "ACVPS Gateway - Local Test"
+  port: 8081
+  metrics_port: 9090
+  tls:
+    enabled: false
+
+blockchain:
+  rpc_url: "http://localhost:8545"  # Not used in local tests
+  contract_address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82"
+  cache_ttl: 300
+  timeout: 10
+  max_retries: 0  # Don't retry blockchain calls in local mode
+  retry_delay: 1
+
+backend:
+  url: "http://localhost:3001"  # Mock AI service
+  timeout: 30
+  max_idle_conns: 100
+  max_conns_per_host: 10
+  idle_conn_timeout: 90
+
+validation:
+  mode: "observe"  # Observe mode for local testing
+  require_dc_headers: false  # Allow non-DC requests for testing
+  enforce_failure_modes: false
+  allow_expired_contracts: true  # Allow any contract for local testing
+  blockchain_verification: false  # Skip blockchain for local testing
+  require_signature: false
+  skip_hash_verification: true  # Skip SHA-256 hash verification for local testing
+
+mitigation:
+  default_strategy: "observe"
+  log_failures: true
+
+cache:
+  redis_url: "redis://localhost:6379"
+  db: 0
+  pool_size: 100
+  default_ttl: 300
+  prefix: "acvps:"
+
+evidence:
+  enabled: true
+  store: "redis"
+  retention_days: 7
+  emit_fields:
+    - trace_id
+    - policy_digest
+    - safety_scores
+    - failure_modes_triggered
+
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+
+metrics:
+  enabled: true
+  port: 9090
+  path: "/metrics"
+
+rate_limit:
+  enabled: false
+  requests_per_second: 1000
+  burst: 100
+
+cors:
+  enabled: true
+  allowed_origins:
+    - "*"
+  allowed_methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "DELETE"
+    - "OPTIONS"
+  allowed_headers:
+    - "*"
+
+dev_mode: true  # Enable development mode
+

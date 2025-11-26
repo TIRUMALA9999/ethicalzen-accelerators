@@ -1,0 +1,65 @@
+{
+  "contract_id": "local-test/general/us/v1.0",
+  "service_name": "local-test-service",
+  "tenant_id": "test-tenant",
+  "domain": "general",
+  "region": "us",
+  "version": "1.0",
+  "status": "active",
+  "approved": true,
+  "description": "Local testing contract with platform guardrails",
+  
+  "feature_extractor": {
+    "id": "pii_detector_v1",
+    "version": "1.0.0",
+    "sha256": "mock-hash-for-local-testing"
+  },
+  
+  "feature_extractors": [
+    {
+      "id": "pii_detector_v1",
+      "weight": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "hipaa_compliance_v1",
+      "weight": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "medical_advice_blocker_v1",
+      "weight": 0.8,
+      "enabled": true
+    }
+  ],
+  
+  "envelope": {
+    "constraints": [
+      {
+        "feature": "pii_risk",
+        "min": 0.0,
+        "max": 0.1,
+        "action": "block"
+      },
+      {
+        "feature": "hipaa_compliance_score",
+        "min": 0.85,
+        "max": 1.0,
+        "action": "warn"
+      },
+      {
+        "feature": "medical_advice_risk",
+        "min": 0.0,
+        "max": 0.3,
+        "action": "warn"
+      }
+    ],
+    "failover_profile": "permissive"
+  },
+  
+  "validation": {
+    "mode": "enforce",
+    "log_violations": true
+  }
+}
+

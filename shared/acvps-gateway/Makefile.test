@@ -1,0 +1,112 @@
+# Makefile for EthicalZen Gateway Testing
+
+.PHONY: test test-unit test-integration test-all test-coverage test-bench clean help
+
+# Variables
+GO=go
+GOTEST=$(GO) test
+GOCOVER=$(GO) tool cover
+TEST_FLAGS=-v -race
+COVERAGE_FILE=coverage.out
+COVERAGE_HTML=coverage.html
+
+help: ## Show this help
+	@echo "Available targets:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+test: test-unit ## Run all unit tests
+	@echo "✅ All unit tests passed!"
+
+test-unit: ## Run unit tests only
+	@echo "🧪 Running unit tests..."
+	$(GOTEST) $(TEST_FLAGS) ./pkg/... ./internal/...
+
+test-integration: ## Run integration tests (requires running gateway)
+	@echo "🔗 Running integration tests..."
+	@echo "⚠️  Make sure gateway is running on http://localhost:8443"
+	$(GOTEST) $(TEST_FLAGS) ./tests/integration/...
+
+test-all: test-unit test-integration ## Run all tests (unit + integration)
+	@echo "✅ All tests passed!"
+
+test-coverage: ## Run tests with coverage report
+	@echo "📊 Generating coverage report..."
+	$(GOTEST) -coverprofile=$(COVERAGE_FILE) -covermode=atomic ./pkg/... ./internal/...
+	$(GOCOVER) -html=$(COVERAGE_FILE) -o $(COVERAGE_HTML)
+	@echo "Coverage report: $(COVERAGE_HTML)"
+	@$(GOCOVER) -func=$(COVERAGE_FILE) | grep total | awk '{print "Total coverage: " $$3}'
+
+test-bench: ## Run benchmarks
+	@echo "⚡ Running benchmarks..."
+	$(GOTEST) -bench=. -benchmem ./pkg/... ./internal/...
+
+test-race: ## Run tests with race detector
+	@echo "🏁 Running tests with race detector..."
+	$(GOTEST) -race ./pkg/... ./internal/...
+
+test-short: ## Run short tests only
+	@echo "⚡ Running short tests..."
+	$(GOTEST) -short ./...
+
+test-verbose: ## Run tests with verbose output
+	@echo "📝 Running tests (verbose)..."
+	$(GOTEST) -v ./...
+
+clean: ## Clean test artifacts
+	@echo "🧹 Cleaning test artifacts..."
+	rm -f $(COVERAGE_FILE) $(COVERAGE_HTML)
+	$(GO) clean -testcache
+
+# Docker-based testing
+test-docker: ## Run tests in Docker container
+	@echo "🐳 Running tests in Docker..."
+	docker run --rm \
+		-v $(PWD):/app \
+		-w /app \
+		golang:1.21-alpine \
+		sh -c "apk add --no-cache make && make test"
+
+test-docker-integration: ## Run integration tests with Docker Compose
+	@echo "🐳 Starting test environment..."
+	docker-compose -f docker-compose.test.yml up -d
+	@echo "⏳ Waiting for services to be ready..."
+	sleep 5
+	@echo "🧪 Running integration tests..."
+	GATEWAY_URL=http://localhost:8443 $(GOTEST) $(TEST_FLAGS) ./tests/integration/...
+	@echo "🛑 Stopping test environment..."
+	docker-compose -f docker-compose.test.yml down
+
+# CI/CD targets
+ci-test: test-unit test-coverage ## Run tests for CI/CD pipeline
+	@echo "✅ CI tests completed!"
+
+ci-lint: ## Run linters for CI/CD
+	@echo "🔍 Running linters..."
+	@command -v golangci-lint >/dev/null 2>&1 || { echo "golangci-lint not installed"; exit 1; }
+	golangci-lint run ./...
+
+# Development helpers
+watch: ## Watch for changes and run tests
+	@echo "👀 Watching for changes..."
+	@command -v watchexec >/dev/null 2>&1 || { echo "watchexec not installed"; exit 1; }
+	watchexec -e go -r "make test-unit"
+
+deps: ## Install dependencies
+	@echo "📦 Installing dependencies..."
+	$(GO) mod download
+	$(GO) mod verify
+
+fmt: ## Format code
+	@echo "🎨 Formatting code..."
+	$(GO) fmt ./...
+
+vet: ## Run go vet
+	@echo "🔍 Running go vet..."
+	$(GO) vet ./...
+
+# Example: Run specific test
+# make test-func TEST=TestValidateThresholds
+test-func: ## Run specific test function (use TEST=FuncName)
+	@echo "🎯 Running test: $(TEST)"
+	$(GOTEST) $(TEST_FLAGS) -run $(TEST) ./...
+

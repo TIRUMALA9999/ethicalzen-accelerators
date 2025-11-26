@@ -1,0 +1,20 @@
+{
+  "id": "smokingguardrail",
+  "name": "non smoking compliance",
+  "description": "Should ensure that any campaigns for smoking are not allowed.",
+  "prompt_template": "You are a compliance officer. Analyze if this content promotes smoking, tobacco, or nicotine products. Return JSON: {\"violates_policy\": bool, \"confidence\": 0-1, \"reasoning\": \"...\", \"violations\": [...]}",
+  "keywords": [
+    "smoking",
+    "cigarette",
+    "tobacco",
+    "vape",
+    "nicotine",
+    "e-cigarette",
+    "cigar"
+  ],
+  "metric_name": "compliance_score",
+  "threshold": 0.75,
+  "invert_score": true,
+  "registered_at": "2025-11-10T20:45:24-05:00",
+  "type": "dynamic"
+}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      width: 320px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+    }
+    
+    h1 {
+      font-size: 16px;
+      margin: 0 0 12px 0;
+      color: #667eea;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .status {
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: #f0f0f0;
+    }
+    
+    .status.active {
+      background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+      border: 1px solid #667eea;
+    }
+    
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 13px;
+    }
+    
+    .metric:last-child {
+      border-bottom: none;
+    }
+    
+    .metric-label {
+      color: #666;
+    }
+    
+    .metric-value {
+      font-weight: 600;
+      color: #667eea;
+    }
+    
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+    
+    button:hover {
+      background: #5568d3;
+    }
+    
+    .links {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eee;
+    }
+    
+    a {
+      color: #667eea;
+      text-decoration: none;
+      font-size: 12px;
+      display: block;
+      margin-top: 8px;
+    }
+    
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔒🔗 ACVPS Protocol</h1>
+  
+  <div class="status" id="status">
+    <div class="metric">
+      <span class="metric-label">Status</span>
+      <span class="metric-value" id="status-value">Active</span>
+    </div>
+    <div class="metric">
+      <span class="metric-label">Current Page</span>
+      <span class="metric-value" id="current-page">-</span>
+    </div>
+    <div class="metric">
+      <span class="metric-label">Contract</span>
+      <span class="metric-value" id="contract-status">None</span>
+    </div>
+  </div>
+  
+  <button id="test-acvps">Test ACVPS URL</button>
+  <button id="open-dashboard">Open Dashboard</button>
+  
+  <div class="links">
+    <strong style="font-size: 12px; color: #666;">Quick Links:</strong>
+    <a href="http://localhost:9090/health" target="_blank">Gateway Health</a>
+    <a href="http://localhost:8000/dashboard.html" target="_blank">Monitoring Dashboard</a>
+    <a href="https://github.com/ethicalzen/acvps-gateway" target="_blank">Documentation</a>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
+

@@ -10,8 +10,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: ../..
-      dockerfile: accelerators-internal/financial-banking-chatbot/Dockerfile.sdk
+      context: .
+      dockerfile: Dockerfile.sdk
     container_name: financial-banking-sdk
     ports:
       - "3001:3000"
@@ -54,7 +54,7 @@ services:
     restart: unless-stopped
 
   gateway:
-    build: ../../acvps-gateway
+    build: ../shared/acvps-gateway
     container_name: acvps-gateway-financial
     ports:
       - "8081:8080"
@@ -82,7 +82,7 @@ services:
     restart: unless-stopped
 
   metrics:
-    build: ../../metrics-service
+    build: ../shared/metrics-service
     container_name: metrics-service-financial
     ports:
       - "9091:9090"

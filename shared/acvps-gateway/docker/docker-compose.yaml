@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # ACVPS Gateway
+  acvps-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: acvps-gateway
+    ports:
+      - "443:443"     # HTTPS gateway
+      - "9090:9090"   # Metrics/health
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./certs:/app/certs:ro
+      - ./logs:/app/logs
+    environment:
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-ws://blockchain-node:8546}
+      - DC_REGISTRY_ADDRESS=${DC_REGISTRY_ADDRESS}
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+      - blockchain-node
+    restart: unless-stopped
+    networks:
+      - acvps-network
+
+  # Redis cache
+  redis:
+    image: redis:7-alpine
+    container_name: acvps-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - acvps-network
+
+  # Local Ethereum node (Hardhat)
+  blockchain-node:
+    image: node:18-alpine
+    container_name: acvps-blockchain
+    working_dir: /blockchain
+    volumes:
+      - ../../aipromptandseccheck/blockchain:/blockchain
+    command: npx hardhat node --hostname 0.0.0.0
+    ports:
+      - "8545:8545"   # HTTP RPC
+      - "8546:8546"   # WebSocket
+    restart: unless-stopped
+    networks:
+      - acvps-network
+
+  # Backend service (example)
+  backend-service:
+    image: node:18-alpine
+    container_name: acvps-backend
+    working_dir: /app
+    volumes:
+      - ../../aipromptandseccheck/services:/app
+    command: node patient-records-service.js
+    ports:
+      - "9001:9001"
+    environment:
+      - DC_CONTROL_PLANE=http://acvps-gateway:443
+    restart: unless-stopped
+    networks:
+      - acvps-network
+
+  # Grafana for monitoring (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: acvps-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../grafana:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: unless-stopped
+    networks:
+      - acvps-network
+
+  # Prometheus for metrics (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: acvps-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ../docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - acvps-network
+
+volumes:
+  redis-data:
+  grafana-data:
+  prometheus-data:
+
+networks:
+  acvps-network:
+    driver: bridge
+

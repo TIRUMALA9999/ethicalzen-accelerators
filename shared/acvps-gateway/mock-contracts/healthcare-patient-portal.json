@@ -1,0 +1,65 @@
+{
+  "contract_id": "Healthcare Patient Portal/general/us/v1.0",
+  "service_name": "Healthcare Patient Portal",
+  "tenant_id": "default-tenant",
+  "domain": "general",
+  "region": "us",
+  "version": "1.0",
+  "status": "active",
+  "approved": true,
+  "description": "HIPAA-compliant healthcare patient portal",
+  
+  "feature_extractor": {
+    "id": "pii_detector_v1",
+    "version": "1.0.0",
+    "sha256": "mock-hash-for-local-testing"
+  },
+  
+  "feature_extractors": [
+    {
+      "id": "pii_detector_v1",
+      "weight": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "hipaa_compliance_v1",
+      "weight": 1.0,
+      "enabled": true
+    },
+    {
+      "id": "medical_advice_blocker_v1",
+      "weight": 0.9,
+      "enabled": true
+    }
+  ],
+  
+  "envelope": {
+    "constraints": [
+      {
+        "feature": "pii_risk",
+        "min": 0.0,
+        "max": 0.1,
+        "action": "block"
+      },
+      {
+        "feature": "hipaa_compliance_score",
+        "min": 0.9,
+        "max": 1.0,
+        "action": "warn"
+      },
+      {
+        "feature": "medical_advice_risk",
+        "min": 0.0,
+        "max": 0.2,
+        "action": "block"
+      }
+    ],
+    "failover_profile": "strict"
+  },
+  
+  "validation": {
+    "mode": "enforce",
+    "log_violations": true
+  }
+}
+

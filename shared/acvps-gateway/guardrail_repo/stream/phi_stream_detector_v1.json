@@ -1,0 +1,59 @@
+{
+  "id": "phi_stream_detector_v1",
+  "name": "PHI Stream Detector (Probabilistic)",
+  "description": "Probabilistic PHI detection on raw byte streams, no parsing required. Works with JSON, Protobuf, XML, or any format.",
+  "type": "stream_probabilistic",
+  "category": "compliance",
+  "version": "1.0.0",
+  
+  "llm_prompt": "You are a medical privacy compliance expert. Analyze the following raw data stream for Protected Health Information (PHI). Consider:\n1. Personal identifiers (SSN, MRN, patient ID, etc)\n2. Medical information (diagnoses, treatments, medications)\n3. Demographics combined with medical context\n4. Insurance and billing information\n\nProvide a probabilistic risk assessment where:\n- 0.0 = No PHI detected (safe)\n- 0.5 = Possible PHI (uncertain)\n- 1.0 = Clear PHI present (block)\n\nBe conservative - favor false positives over false negatives for HIPAA compliance.",
+  
+  "llm_provider": "groq",
+  
+  "keywords": [
+    "ssn",
+    "social security",
+    "medical record",
+    "patient",
+    "diagnosis",
+    "diagnosed",
+    "treatment",
+    "medication",
+    "prescription",
+    "insurance",
+    "policy number",
+    "mrn",
+    "date of birth",
+    "dob",
+    "patient id",
+    "health record",
+    "medical history",
+    "doctor",
+    "physician",
+    "hospital",
+    "clinic",
+    "sensitive_data",
+    "phi_data",
+    "patient_info"
+  ],
+  
+  "patterns": [
+    "\\d{3}-\\d{2}-\\d{4}",
+    "MRN-\\d+",
+    "Patient ID: \\d+"
+  ],
+  
+  "metric_name": "phi_stream_risk",
+  "threshold": 0.15,
+  
+  "default_constraint": {
+    "min": 0.0,
+    "max": 0.15,
+    "action": "block"
+  },
+  
+  "scope": "stream",
+  "fallback": "hipaa_compliance_v1",
+  "registered_at": "2025-11-16T00:00:00Z"
+}
+

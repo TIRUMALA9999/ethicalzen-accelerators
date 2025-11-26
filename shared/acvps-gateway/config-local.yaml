@@ -1,0 +1,120 @@
+# ACVPS Gateway - Local Development Configuration
+# 
+# This configuration is for running the gateway locally on a developer's machine.
+# The gateway will sync contracts from the cloud control plane and push evidence back.
+#
+# Setup Instructions:
+# 1. Copy this file to config-local.yaml
+# 2. Register a gateway: curl -X POST https://ethicalzen-backend-YOUR-PROJECT.us-central1.run.app/api/gateway/register \
+#      -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+#      -H "Content-Type: application/json" \
+#      -d '{"gateway_name": "my-local-gateway"}'
+# 3. Copy the API key and tenant ID from the response
+# 4. Update the values below
+
+gateway:
+  name: "local-dev-gateway"
+  port: 8443
+  metrics_port: 9090
+  mode: "local"  # LOCAL MODE: Sync from control plane
+  
+  # REQUIRED: Get these from POST /api/gateway/register
+  api_key: "gw_YOUR_API_KEY_HERE"  # Gateway API key for authentication
+  tenant_id: "tenant_YOUR_TENANT_ID_HERE"  # Your tenant ID
+  control_plane_url: "https://ethicalzen-backend-400782183161.us-central1.run.app"  # Backend URL
+  
+  tls:
+    enabled: false  # Set to true for HTTPS (requires cert and key)
+    cert: ""
+    key: ""
+    insecure_skip_verify: true  # For local dev with self-signed certs
+
+# Blockchain verification (optional for local dev)
+blockchain:
+  rpc_url: "https://polygon-mumbai.g.alchemy.com/v2/demo"
+  contract_address: "0x0000000000000000000000000000000000000000"
+  cache_ttl: 300
+  timeout: 10
+  max_retries: 3
+  retry_delay: 1000
+
+# Backend service URL (the service you're protecting)
+backend:
+  url: "http://localhost:9001"  # Your local backend service
+  timeout: 30
+  max_idle_conns: 100
+  max_conns_per_host: 10
+  idle_conn_timeout: 90
+
+# Validation settings
+validation:
+  mode: "enforce"  # "enforce" (block violations) or "observe" (log only)
+  require_dc_headers: true  # Require X-DC-Id and X-DC-Digest headers
+  enforce_failure_modes: true
+  blockchain_verification: false  # Set to false for faster local dev
+  skip_hash_verification: true  # Skip digest verification for local dev
+  allowed_suites: ["S0", "S1", "S2", "S3"]
+
+# Mitigation (PII redaction, etc.)
+mitigation:
+  pii_redaction:
+    enabled: true
+    always_redact: ["email", "ssn", "phone"]
+  grounding:
+    enabled: true
+    min_confidence: 0.7
+    action: "warn"  # "warn" or "block"
+  hallucination:
+    enabled: true
+    max_risk: 0.3
+    action: "warn"  # "warn" or "block"
+
+# Cache: Not needed in local mode (uses HTTP API instead of Redis)
+cache:
+  redis_url: "redis://localhost:6379"  # Optional: local Redis for caching
+  redis_password: ""
+  redis_db: 0
+  pool_size: 10
+  max_retries: 3
+
+# Evidence: Will be pushed to control plane
+evidence:
+  control_plane_url: "${CONTROL_PLANE_URL}"  # Uses same as gateway.control_plane_url
+  api_key: "${GATEWAY_API_KEY}"  # Uses same as gateway.api_key
+  buffer_size: 100
+  flush_interval: 10  # seconds
+  async: true  # Don't block requests
+
+# Logging
+logging:
+  level: "debug"  # Use "debug" for local dev
+  format: "text"  # "json" or "text" (text is easier to read locally)
+  output: "stdout"
+  file: ""
+  max_size: 100
+  max_backups: 3
+  max_age: 7
+
+# Metrics (Prometheus)
+metrics:
+  enabled: true
+  path: "/metrics"
+  namespace: "acvps_local"
+
+# Rate limiting
+rate_limit:
+  enabled: false  # Disable for local dev
+  rps: 1000
+  burst: 2000
+
+# CORS
+cors:
+  enabled: true
+  allowed_origins: ["*"]  # Allow all for local dev
+  allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  allowed_headers: ["*"]
+  maxage: 3600
+
+# Developer mode
+dev_mode: true  # Enable debug features
+

@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: ../..
-      dockerfile: accelerators-internal/education-tutoring-bot/Dockerfile.sdk
+      context: .
+      dockerfile: Dockerfile.sdk
     container_name: education-tutoring-sdk
     ports:
       - "3003:3000"
@@ -33,7 +33,7 @@ services:
       - education-network
 
   gateway:
-    build: ../../acvps-gateway
+    build: ../shared/acvps-gateway
     container_name: acvps-gateway-education
     ports:
       - "8083:8080"
@@ -55,7 +55,7 @@ services:
       - education-network
 
   metrics:
-    build: ../../metrics-service
+    build: ../shared/metrics-service
     container_name: metrics-service-education
     ports:
       - "9093:9090"

@@ -1,0 +1,661 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/ethicalzen/acvps-gateway/internal/api"
+	"github.com/ethicalzen/acvps-gateway/internal/blockchain"
+	"github.com/ethicalzen/acvps-gateway/internal/cache"
+	"github.com/ethicalzen/acvps-gateway/internal/config"
+	"github.com/ethicalzen/acvps-gateway/internal/proxy"
+	"github.com/ethicalzen/acvps-gateway/pkg/gateway"
+	"github.com/ethicalzen/acvps-gateway/pkg/telemetry"
+	"github.com/ethicalzen/acvps-gateway/pkg/txrepo"
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	log "github.com/sirupsen/logrus"
+)
+
+var (
+	Version   = "dev"
+	BuildTime = "unknown"
+)
+
+func main() {
+	// Parse flags
+	configPath := flag.String("config", "config.yaml", "Path to configuration file")
+	flag.Parse()
+
+	// Load configuration
+	cfg, err := config.Load(*configPath)
+	if err != nil {
+		log.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	// Configure logging
+	setupLogging(cfg)
+
+	log.WithFields(log.Fields{
+		"version":    Version,
+		"build_time": BuildTime,
+		"config":     *configPath,
+	}).Info("Starting ACVPS Gateway")
+
+	// Initialize components
+	ctx := context.Background()
+
+	// Initialize cache (optional for local mode and disabled configs)
+	var cacheClient *cache.Client
+
+	if cfg.Gateway.Mode == "local" {
+		// Local mode: Redis is optional (we fetch contracts via HTTP)
+		log.Info("🏠 [LOCAL MODE] Skipping Redis initialization (not required)")
+		cacheClient = nil
+	} else if !cfg.Cache.Enabled {
+		// Cache is disabled in config
+		log.Info("ℹ️  Cache disabled in configuration, running without Redis")
+		cacheClient = nil
+	} else {
+		// Cloud mode with cache enabled: Redis is required
+		cacheClient, err = cache.New(cfg.Cache)
+		if err != nil {
+			log.Fatalf("Failed to initialize cache: %v", err)
+		}
+		defer cacheClient.Close()
+		log.Info("✅ Cache initialized")
+	}
+
+	// Initialize blockchain client (optional for local mode)
+	var blockchainClient *blockchain.Client
+
+	if cfg.Gateway.Mode != "local" && cfg.Blockchain.Enabled {
+		blockchainClient, err = blockchain.New(cfg.Blockchain, cacheClient)
+		if err != nil {
+			log.Fatalf("Failed to initialize blockchain client: %v", err)
+		}
+		defer blockchainClient.Close()
+		log.Info("✅ Blockchain client initialized")
+	} else {
+		if cfg.Gateway.Mode == "local" {
+			log.Info("🏠 [LOCAL MODE] Skipping blockchain client (not required)")
+		} else {
+			log.Info("ℹ️  Blockchain disabled in configuration")
+		}
+		blockchainClient = nil
+	}
+
+	// Health check (skip for local mode)
+	if blockchainClient != nil {
+		if err := blockchainClient.HealthCheck(ctx); err != nil {
+			log.Warnf("Blockchain health check failed: %v", err)
+		} else {
+			log.Info("✅ Blockchain connection healthy")
+		}
+	}
+
+	// Initialize telemetry collector
+	telemetry.InitCollector()
+	log.Info("✅ Telemetry collector initialized")
+
+	// Initialize proxy handler for validation + forwarding
+	proxyHandler := proxy.New(cfg, blockchainClient, cacheClient)
+	log.Info("✅ Proxy handler initialized")
+
+	// Initialize API key validator (non-blocking, skip in local mode)
+	var apiHandler *api.Handler
+
+	if cacheClient != nil {
+		redisClient := cacheClient.GetRedisClient()
+		if redisClient != nil {
+			apiKeyValidator := api.NewApiKeyValidator(redisClient)
+			log.Info("✅ API key validator initialized")
+
+			// Initialize API handler with validator (enables authentication)
+			apiHandler = api.NewWithValidator(cacheClient, apiKeyValidator)
+			log.Info("✅ API handler initialized with authentication enabled")
+		} else {
+			// Fallback to non-authenticated mode if Redis not available
+			log.Warn("⚠️  Redis not available, starting in non-authenticated mode")
+			apiHandler = api.New(cacheClient)
+			log.Info("✅ API handler initialized (authentication disabled)")
+		}
+	} else {
+		// Local mode: Use API key validator even without Redis (hardcoded demo key mapping)
+		log.Info("🏠 [LOCAL MODE] Initializing API handler with authentication...")
+		apiKeyValidator := api.NewApiKeyValidator(nil) // nil Redis is OK, validator has hardcoded demo key
+		apiHandler = api.NewWithValidator(nil, apiKeyValidator)
+		log.Info("✅ API handler initialized (local mode with authentication)")
+	}
+
+	// ============================================================================
+	// WEBHOOK HANDLER - Instant contract sync notifications
+	// ============================================================================
+	// Get backend URL and API key for webhook registration
+	backendURL := os.Getenv("PORTAL_BACKEND_URL")
+	if backendURL == "" {
+		backendURL = cfg.Evidence.ControlPlaneURL
+	}
+	if backendURL == "" {
+		backendURL = "http://backend:4000" // Default for local Docker
+	}
+
+	apiKey := os.Getenv("ETHICALZEN_API_KEY")
+	if apiKey == "" {
+		apiKey = "sk-demo-public-playground-ethicalzen" // Default for local testing
+	}
+
+	// Create webhook handler
+	webhookHandler := api.NewWebhookHandler(backendURL, apiKey)
+	apiHandler.SetWebhookHandler(webhookHandler)
+	log.Info("✅ Webhook handler initialized")
+
+	// Register webhook URL with backend (gateway's public URL)
+	webhookURL := os.Getenv("GATEWAY_WEBHOOK_URL")
+	if webhookURL == "" {
+		webhookURL = fmt.Sprintf("http://gateway:%d/api/webhooks", cfg.Gateway.Port)
+	}
+	gatewayID := os.Getenv("GATEWAY_ID")
+	if gatewayID == "" {
+		gatewayID = fmt.Sprintf("gateway-%s", cfg.Gateway.Name)
+	}
+
+	log.WithFields(log.Fields{
+		"webhook_url": webhookURL,
+		"gateway_id":  gatewayID,
+		"backend_url": backendURL,
+	}).Info("🔔 Registering webhook with backend...")
+
+	if err := gateway.RegisterWebhook(backendURL, apiKey, webhookURL, gatewayID); err != nil {
+		log.WithError(err).Warn("⚠️  Failed to register webhook, falling back to polling")
+	} else {
+		log.Info("✅ Webhook registered successfully - instant contract sync enabled!")
+	}
+
+	// Load contracts based on gateway mode
+	localMode := cfg.Gateway.Mode == "local"
+
+	if localMode {
+		// LOCAL MODE: Can work standalone or sync with control plane
+		log.Info("🏠 [LOCAL MODE] Gateway running in local development mode")
+
+		// Optional: Sync with control plane if credentials provided
+		if cfg.Gateway.APIKey != "" && cfg.Gateway.TenantID != "" && cfg.Gateway.ControlPlaneURL != "" {
+			log.WithFields(log.Fields{
+				"tenant_id":         cfg.Gateway.TenantID,
+				"control_plane_url": cfg.Gateway.ControlPlaneURL,
+			}).Info("📡 [LOCAL MODE] Control plane credentials found, registering gateway...")
+
+			// Register gateway with customer API key and get gateway API key
+			gatewayName := fmt.Sprintf("gateway-%s-%d", cfg.Gateway.TenantID, time.Now().Unix())
+			gatewayAPIKey, err := gateway.RegisterGateway(ctx, cfg.Gateway.ControlPlaneURL, cfg.Gateway.APIKey, gatewayName)
+			if err != nil {
+				log.Warnf("❌ [LOCAL MODE] Gateway registration failed: %v", err)
+				log.Info("⚠️  [LOCAL MODE] Trying direct contract sync with customer API key...")
+
+				// Fallback: try using customer API key directly (may not work)
+				if err := gateway.LoadContractsFromControlPlane(ctx, cfg.Gateway.ControlPlaneURL, cfg.Gateway.APIKey, cfg.Gateway.TenantID); err != nil {
+					log.Warnf("❌ [LOCAL MODE] Failed to load contracts: %v", err)
+					log.Info("⚠️  [LOCAL MODE] Gateway will start but may not have any contracts loaded")
+				}
+			} else {
+				log.Info("✅ [LOCAL MODE] Gateway registered successfully, loading contracts...")
+
+				// Load contracts using gateway API key
+				if err := gateway.LoadContractsFromControlPlane(ctx, cfg.Gateway.ControlPlaneURL, gatewayAPIKey, cfg.Gateway.TenantID); err != nil {
+					log.Warnf("❌ [LOCAL MODE] Failed to load contracts with gateway API key: %v", err)
+					log.Info("⚠️  [LOCAL MODE] Gateway will start but may not have any contracts loaded")
+				} else {
+					log.Info("✅ [LOCAL MODE] Contracts loaded from control plane")
+
+					// Start periodic sync with gateway API key (every 60 seconds)
+					go gateway.StartPeriodicSync(ctx, cfg.Gateway.ControlPlaneURL, gatewayAPIKey, cfg.Gateway.TenantID, 60*time.Second)
+
+					// Subscribe to real-time guardrail updates
+					go gateway.StartGuardrailSync(ctx, cfg.Gateway.ControlPlaneURL, gatewayAPIKey, cfg.Gateway.TenantID)
+				}
+			}
+		} else {
+			log.Info("🏠 [LOCAL MODE] No control plane credentials - running in standalone mode")
+			log.Info("💡 [LOCAL MODE] Contracts will be loaded in-memory on demand")
+			log.Info("💡 [LOCAL MODE] To sync with backend, set ETHICALZEN_API_KEY, GATEWAY_TENANT_ID, and CONTROL_PLANE_URL")
+		}
+
+	} else {
+		// CLOUD MODE: Load contracts from Redis (multi-tenant)
+		log.Info("☁️  [CLOUD MODE] Gateway running in cloud multi-tenant mode")
+
+		if cacheClient != nil {
+			// Redis is enabled - load from Redis
+			if err := gateway.LoadAllContractsAtBoot(ctx, cacheClient); err != nil {
+				log.Warnf("Failed to load contracts at boot: %v", err)
+			} else {
+				log.Info("✅ Contracts loaded for feature extraction")
+			}
+
+			// Start auto-reload of contracts (polls Redis every 30 seconds for safety)
+			go gateway.StartAutoReload(ctx, cacheClient, 30*time.Second)
+
+			// Start Pub/Sub listener for instant contract updates (when approved)
+			go gateway.StartPubSubListener(ctx, cacheClient)
+		} else {
+			// Cache is disabled - sync from backend API
+			log.Info("ℹ️  [CLOUD MODE] Cache disabled, using in-memory store")
+
+			// Get backend URL from environment or config
+			backendURL := os.Getenv("PORTAL_BACKEND_URL")
+			if backendURL == "" {
+				backendURL = cfg.Evidence.ControlPlaneURL
+			}
+			if backendURL == "" {
+				log.Warn("⚠️  No backend URL configured, contracts will not be loaded")
+			} else {
+				// Sync contracts from backend at boot
+				apiKey := os.Getenv("ETHICALZEN_API_KEY")
+				if apiKey == "" {
+					apiKey = "sk-demo-public-playground-ethicalzen" // Default for local testing
+				}
+
+				log.WithField("backend_url", backendURL).Info("📡 Syncing contracts from backend API...")
+				if err := gateway.SyncContractsFromBackend(ctx, backendURL, apiKey); err != nil {
+					log.WithError(err).Warn("⚠️  Failed to sync contracts from backend")
+					log.Warn("   Gateway will start but validation may fail until contracts are loaded")
+				} else {
+					log.Info("✅ Contracts synced from backend API")
+				}
+
+				// Start periodic sync (every 10 seconds in local mode for faster testing)
+				go gateway.StartPeriodicBackendSync(ctx, backendURL, apiKey, 10*time.Second)
+			}
+		}
+	}
+
+	// ============================================================================
+	// GUARDRAIL LOADING - Platform (Bundled) + Tenant-Specific (GitHub)
+	// ============================================================================
+	// Loading Order:
+	// 1. Platform baseline extractors (BUNDLED IN DOCKER IMAGE) - ALWAYS LOADED FIRST
+	// 2. Tenant-specific extractors (from each tenant's GitHub repo via GDK)
+	//
+	// Architecture:
+	// - Platform extractors: PII, PHI, HIPAA, etc. (bundled in /app/guardrail_repo)
+	//   → Baked into Docker image at build time
+	//   → Stable, versioned with gateway releases
+	//   → Available to ALL tenants automatically
+	//
+	// - Tenant extractors: Custom domain-specific guardrails (loaded from GitHub)
+	//   → Created via GDK in portal
+	//   → Stored in tenant's own GitHub repo
+	//   → Loaded dynamically at gateway boot
+	//   → BYOG (Bring Your Own Guardrails) architecture
+	//
+	// This enables:
+	// - Fast boot time (platform guardrails are local)
+	// - No external dependencies for baseline security
+	// - Tenant customization without platform redeployment
+	// - Version control for tenant-specific rules
+
+	log.Info("🔧 Loading guardrails (Platform Bundled + Tenant GitHub)...")
+
+	// STEP 1: Load Platform Baseline Extractors (BUNDLED IN IMAGE)
+	// These are the generic extractors that all tenants get
+	guardrailRepoPath := os.Getenv("GUARDRAIL_REPO_PATH")
+	if guardrailRepoPath == "" {
+		guardrailRepoPath = "/app/guardrail_repo" // Default Docker path
+	}
+
+	log.WithField("path", guardrailRepoPath).Info("📦 STEP 1: Loading platform baseline guardrails (bundled)...")
+
+	guardrailRepoConfig := txrepo.GuardrailRepoConfig{
+		RepositoryPath: guardrailRepoPath,
+		Categories:     []string{"default"},
+		AutoReload:     false,
+	}
+
+	if err := txrepo.LoadGuardrailsFromRepository(guardrailRepoConfig); err != nil {
+		log.Errorf("❌ Failed to load platform guardrails from bundled filesystem: %v", err)
+		log.Error("   Platform baseline security is unavailable!")
+	} else {
+		log.Info("✅ Platform baseline guardrails loaded from bundled image")
+	}
+
+	// STEP 2: Load Tenant-Specific Extractors (from each tenant's GitHub repo)
+	// Tenants configure their GitHub repo in the portal (GDK settings)
+	// Gateway loads tenant configs from control plane or local config
+	log.Info("📦 STEP 2: Loading tenant-specific guardrails...")
+
+	// In cloud mode: Load tenant GitHub configs from control plane/Redis
+	// In local mode: Load from environment or skip
+
+	// TODO: Implement tenant config loading from control plane
+	// For now, log that this step is ready for tenant configs
+	if err := txrepo.LoadAllTenantGuardrails(); err != nil {
+		log.Warnf("⚠️  No tenant guardrails loaded (tenants need to configure GitHub repos in portal): %v", err)
+	} else {
+		log.Info("✅ Tenant-specific guardrails loaded")
+	}
+
+	// ============================================================================
+	// LOCAL MODE: Sync contracts from control plane API
+	// ============================================================================
+	if cfg.Gateway.Mode == "local" {
+		log.Info("🌐 [LOCAL MODE] Gateway starting in local mode...")
+
+		// Local mode requires:
+		// - CUSTOMER API KEY (env: ETHICALZEN_API_KEY or config: gateway.api_key)
+		// - Control plane URL (env: CONTROL_PLANE_URL or config: gateway.control_plane_url)
+		// - Tenant ID (env: GATEWAY_TENANT_ID or config: gateway.tenant_id)
+
+		if cfg.Gateway.APIKey == "" {
+			log.Fatal("❌ [LOCAL MODE] Missing API key. Set ETHICALZEN_API_KEY or gateway.api_key in config")
+		}
+
+		if cfg.Gateway.ControlPlaneURL == "" {
+			log.Fatal("❌ [LOCAL MODE] Missing control plane URL. Set CONTROL_PLANE_URL or gateway.control_plane_url in config")
+		}
+
+		log.WithFields(log.Fields{
+			"control_plane_url": cfg.Gateway.ControlPlaneURL,
+			"tenant_id":         cfg.Gateway.TenantID,
+		}).Info("🔐 [LOCAL MODE] Authenticating with control plane...")
+
+		// Register gateway and get gateway API key (exchanges customer key for gateway key)
+		gatewayAPIKey, err := gateway.RegisterGateway(ctx, cfg.Gateway.ControlPlaneURL, cfg.Gateway.APIKey, cfg.Gateway.Name)
+		if err != nil {
+			log.Warnf("⚠️  [LOCAL MODE] Gateway registration failed: %v", err)
+			log.Info("   Attempting to use customer API key directly for contract sync...")
+
+			// Fallback: try using customer API key directly (may not work)
+			if err := gateway.LoadContractsFromControlPlane(ctx, cfg.Gateway.ControlPlaneURL, cfg.Gateway.APIKey, cfg.Gateway.TenantID); err != nil {
+				log.Warnf("❌ [LOCAL MODE] Failed to load contracts: %v", err)
+				log.Info("⚠️  [LOCAL MODE] Gateway will start but may not have any contracts loaded")
+			}
+		} else {
+			log.Info("✅ [LOCAL MODE] Gateway registered successfully")
+
+			// Load contracts using gateway API key
+			if err := gateway.LoadContractsFromControlPlane(ctx, cfg.Gateway.ControlPlaneURL, gatewayAPIKey, cfg.Gateway.TenantID); err != nil {
+				log.Warnf("❌ [LOCAL MODE] Failed to load contracts with gateway API key: %v", err)
+				log.Info("⚠️  [LOCAL MODE] Gateway will start but may not have any contracts loaded")
+			}
+
+			// Start periodic sync (refresh contracts every 60 seconds)
+			go gateway.StartPeriodicSync(ctx, cfg.Gateway.ControlPlaneURL, gatewayAPIKey, cfg.Gateway.TenantID, 60*time.Second)
+		}
+
+		// Start guardrail sync subscription (real-time updates)
+		go gateway.StartGuardrailSync(ctx, cfg.Gateway.ControlPlaneURL, cfg.Gateway.APIKey, cfg.Gateway.TenantID)
+
+	} else {
+		// ============================================================================
+		// CLOUD MODE: Load contracts from Redis or Backend API
+		// ============================================================================
+		log.Info("☁️  [CLOUD MODE] Gateway starting in cloud mode...")
+
+		if cacheClient != nil {
+			// Redis enabled - load from Redis
+			log.Info("📊 Loading contracts from Redis cache...")
+
+			// Load all contracts at boot
+			if err := gateway.LoadAllContractsAtBoot(ctx, cacheClient); err != nil {
+				log.Warnf("⚠️  Failed to load contracts at boot: %v", err)
+				log.Info("   Gateway will start but validation will fail until contracts are loaded")
+			}
+
+			// Start auto-reload of contracts (polls Redis every 30 seconds for safety)
+			go gateway.StartAutoReload(ctx, cacheClient, 30*time.Second)
+
+			// Start Pub/Sub listener for instant contract updates (when approved)
+			go gateway.StartPubSubListener(ctx, cacheClient)
+		} else {
+			// Redis disabled - sync from backend API
+			log.Info("ℹ️  Cache disabled, syncing contracts from backend API...")
+
+			backendURL := os.Getenv("PORTAL_BACKEND_URL")
+			if backendURL == "" {
+				backendURL = cfg.Evidence.ControlPlaneURL
+			}
+
+			if backendURL != "" {
+				apiKey := os.Getenv("ETHICALZEN_API_KEY")
+				if apiKey == "" {
+					apiKey = "sk-demo-public-playground-ethicalzen"
+				}
+
+				if err := gateway.SyncContractsFromBackend(ctx, backendURL, apiKey); err != nil {
+					log.WithError(err).Warn("⚠️  Failed to sync contracts from backend")
+				} else {
+					log.Info("✅ Contracts synced from backend API")
+				}
+
+				// Start periodic sync (every 10 seconds for faster testing, will be replaced with SSE)
+				go gateway.StartPeriodicBackendSync(ctx, backendURL, apiKey, 10*time.Second)
+			} else {
+				log.Warn("⚠️  No backend URL configured for contract sync")
+			}
+		}
+	}
+
+	// ============================================================================
+	// STEP 3: Load Mock Contracts (LOCAL MODE ONLY)
+	// ============================================================================
+	// For local development and testing, load pre-defined contracts that use
+	// the platform guardrails. This enables full validation testing without
+	// requiring a control plane or Redis.
+	//
+	// In production, contracts are loaded from Redis/control plane.
+	// ============================================================================
+
+	if localMode {
+		log.Info("📋 STEP 3: Loading mock contracts for local testing...")
+
+		mockContractsPath := os.Getenv("MOCK_CONTRACTS_PATH")
+		if mockContractsPath == "" {
+			mockContractsPath = "/app/mock-contracts" // Default Docker path
+		}
+
+		if err := gateway.LoadMockContracts(ctx, mockContractsPath); err != nil {
+			log.Warnf("⚠️  Failed to load mock contracts: %v", err)
+			log.Warn("   Validation will be skipped for requests without loaded contracts")
+		} else {
+			log.Info("✅ Mock contracts loaded for local testing")
+		}
+	}
+
+	// Setup routers
+	mainRouter := mux.NewRouter()
+	metricsRouter := mux.NewRouter()
+
+	// Register API routes (must be before proxy catch-all)
+	apiHandler.RegisterRoutes(mainRouter)
+
+	// Register transparent proxy route (STATELESS - certificate in path)
+	// Path format: /proxy/{certificateID}/{targetURL}
+	// Example: /proxy/hipaa-compliant-llm-v1/https://api.openai.com/v1/chat/completions
+	mainRouter.PathPrefix("/proxy/").HandlerFunc(proxyHandler.HandleTransparentProxy)
+	log.Info("✅ Transparent proxy route registered: /proxy/{cert}/{url}")
+
+	// Proxy mode: intercept ALL backend requests and validate
+	// This catch-all must be LAST
+	mainRouter.PathPrefix("/").Handler(proxyHandler)
+
+	// Wrap main router with CORS middleware
+	corsHandler := api.CORSMiddleware(mainRouter)
+
+	// Metrics endpoints
+	if cfg.Metrics.Enabled {
+		metricsRouter.Handle(cfg.Metrics.Path, promhttp.Handler())
+		metricsRouter.HandleFunc("/health", healthHandler(blockchainClient, cacheClient))
+		log.WithField("port", cfg.Gateway.MetricsPort).Info("✅ Metrics server configured")
+	}
+
+	// Start metrics server
+	metricsServer := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Gateway.MetricsPort),
+		Handler:      metricsRouter,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}
+
+	go func() {
+		log.WithField("port", cfg.Gateway.MetricsPort).Info("Starting metrics server")
+		if err := metricsServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Metrics server failed: %v", err)
+		}
+	}()
+
+	// Start main gateway server
+	gatewayServer := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Gateway.Port),
+		Handler:      corsHandler,
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+
+	go func() {
+		log.WithFields(log.Fields{
+			"port": cfg.Gateway.Port,
+			"tls":  cfg.Gateway.TLS.Enabled,
+		}).Info("🚀 ACVPS Gateway started")
+
+		if cfg.Gateway.TLS.Enabled {
+			if err := gatewayServer.ListenAndServeTLS(
+				cfg.Gateway.TLS.Cert,
+				cfg.Gateway.TLS.Key,
+			); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("Gateway server failed: %v", err)
+			}
+		} else {
+			if err := gatewayServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				log.Fatalf("Gateway server failed: %v", err)
+			}
+		}
+	}()
+
+	// Wait for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Info("Shutting down gracefully...")
+
+	// Flush remaining telemetry
+	telemetry.GetCollector().Flush()
+	log.Info("✅ Telemetry flushed")
+
+	// Graceful shutdown with timeout
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := gatewayServer.Shutdown(shutdownCtx); err != nil {
+		log.Errorf("Gateway server shutdown error: %v", err)
+	}
+
+	if err := metricsServer.Shutdown(shutdownCtx); err != nil {
+		log.Errorf("Metrics server shutdown error: %v", err)
+	}
+
+	log.Info("👋 ACVPS Gateway stopped")
+}
+
+func setupLogging(cfg *config.Config) {
+	// Set log level
+	level, err := log.ParseLevel(cfg.Logging.Level)
+	if err != nil {
+		level = log.InfoLevel
+	}
+	log.SetLevel(level)
+
+	// Set log format
+	if cfg.Logging.Format == "json" {
+		log.SetFormatter(&log.JSONFormatter{
+			TimestampFormat: time.RFC3339,
+		})
+	} else {
+		log.SetFormatter(&log.TextFormatter{
+			FullTimestamp:   true,
+			TimestampFormat: time.RFC3339,
+		})
+	}
+
+	// Set log output
+	if cfg.Logging.Output == "file" {
+		file, err := os.OpenFile(cfg.Logging.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			log.Fatalf("Failed to open log file: %v", err)
+		}
+		log.SetOutput(file)
+	} else {
+		log.SetOutput(os.Stdout)
+	}
+}
+
+func healthHandler(bc *blockchain.Client, c *cache.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		status := map[string]interface{}{
+			"status":  "healthy",
+			"version": Version,
+		}
+
+		// Check blockchain
+		if bc != nil {
+			if err := bc.HealthCheck(ctx); err != nil {
+				status["blockchain"] = map[string]interface{}{
+					"connected": false,
+					"error":     err.Error(),
+				}
+				status["status"] = "degraded"
+			} else {
+				blockNumber, _ := bc.GetBlockNumber(ctx)
+				status["blockchain"] = map[string]interface{}{
+					"connected":    true,
+					"block_number": blockNumber,
+				}
+			}
+		} else {
+			status["blockchain"] = map[string]interface{}{
+				"enabled": false,
+			}
+		}
+
+		// Check cache
+		if c != nil {
+			if err := c.Ping(ctx); err != nil {
+				status["cache"] = map[string]interface{}{
+					"connected": false,
+					"error":     err.Error(),
+				}
+				status["status"] = "degraded"
+			} else {
+				hitRate := c.GetHitRate()
+				status["cache"] = map[string]interface{}{
+					"connected": true,
+					"hit_rate":  hitRate,
+				}
+			}
+		} else {
+			status["cache"] = map[string]interface{}{
+				"enabled": false,
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if status["status"] == "degraded" {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		} else {
+			w.WriteHeader(http.StatusOK)
+		}
+
+		// Write response (error handling omitted for brevity)
+		fmt.Fprintf(w, `{"status":"%s","version":"%s"}`, status["status"], Version)
+	}
+}

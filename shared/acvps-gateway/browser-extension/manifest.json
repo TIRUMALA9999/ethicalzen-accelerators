@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "ACVPS Protocol Handler",
+  "version": "1.2.0",
+  "description": "Automatically handle acvps:// URLs and add blockchain-validated AI contract headers",
+  "permissions": [
+    "storage",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "externally_connectable": {
+    "matches": ["*://localhost/*", "*://127.0.0.1/*"]
+  }
+}

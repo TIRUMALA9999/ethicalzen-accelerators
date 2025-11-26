@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: ../..
-      dockerfile: accelerators-internal/ecommerce-support-chatbot/Dockerfile.sdk
+      context: .
+      dockerfile: Dockerfile.sdk
     container_name: ecommerce-support-sdk
     ports:
       - "3004:3000"
@@ -33,7 +33,7 @@ services:
       - ecommerce-network
 
   gateway:
-    build: ../../acvps-gateway
+    build: ../shared/acvps-gateway
     container_name: acvps-gateway-ecommerce
     ports:
       - "8084:8080"
@@ -55,7 +55,7 @@ services:
       - ecommerce-network
 
   metrics:
-    build: ../../metrics-service
+    build: ../shared/metrics-service
     container_name: metrics-service-ecommerce
     ports:
       - "9094:9090"

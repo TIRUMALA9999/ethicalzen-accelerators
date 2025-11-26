@@ -1,0 +1,71 @@
+{
+  "id": "my_custom_guardrail_v1",
+  "name": "My Custom Guardrail",
+  "description": "Describe what this guardrail protects against",
+  "version": "1.0.0",
+  "category": "security|compliance|safety|quality",
+  
+  "metrics": {
+    "my_metric_name": {
+      "description": "What this metric measures (e.g., 'Risk of toxic language')",
+      "type": "float",
+      "range": [0, 1],
+      "invert_score": false,
+      "threshold": {
+        "min": 0.0,
+        "max": 0.2,
+        "action": "block"
+      }
+    }
+  },
+  
+  "feature_extractors": {
+    "my_metric_name": {
+      "type": "pattern|llm|hybrid|custom",
+      "extractor": {
+        "_comment": "Choose ONE of the following extractor types:",
+        
+        "_option_1_pattern_based": {
+          "keywords": ["keyword1", "keyword2"],
+          "patterns": ["\\bregex_pattern\\b"],
+          "case_sensitive": false
+        },
+        
+        "_option_2_llm_based": {
+          "prompt_template": "Analyze this text: \"%s\"\n\nReturn JSON: {\"score\": 0.0-1.0, \"reasoning\": \"...\"}",
+          "model": "groq/llama3-8b-8192",
+          "temperature": 0.1,
+          "max_tokens": 150
+        },
+        
+        "_option_3_hybrid": {
+          "pattern_based": {
+            "keywords": ["keyword1", "keyword2"],
+            "weight": 0.3
+          },
+          "llm_based": {
+            "prompt_template": "Analyze: \"%s\"",
+            "weight": 0.7
+          }
+        },
+        
+        "_option_4_custom_function": {
+          "function_name": "myCustomExtractor",
+          "runtime": "javascript|python|wasm",
+          "code_url": "https://github.com/mycompany/guardrails/blob/main/my_extractor.js",
+          "code_hash": "sha256:abc123...",
+          "dependencies": ["dependency1", "dependency2"]
+        }
+      }
+    }
+  },
+  
+  "metadata": {
+    "author": "your_company_name",
+    "created_at": "2025-11-22T00:00:00Z",
+    "tags": ["custom", "domain-specific"],
+    "contact": "security@yourcompany.com",
+    "license": "MIT|Apache-2.0|Proprietary"
+  }
+}
+

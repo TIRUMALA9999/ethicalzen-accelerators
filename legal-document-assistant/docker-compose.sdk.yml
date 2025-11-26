@@ -3,8 +3,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: ../..
-      dockerfile: accelerators-internal/legal-document-assistant/Dockerfile.sdk
+      context: .
+      dockerfile: Dockerfile.sdk
     container_name: legal-assistant-sdk
     ports:
       - "3002:3000"
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   gateway:
-    build: ../../acvps-gateway
+    build: ../shared/acvps-gateway
     container_name: acvps-gateway-legal
     ports:
       - "8082:8080"
@@ -62,7 +62,7 @@ services:
     restart: unless-stopped
 
   metrics:
-    build: ../../metrics-service
+    build: ../shared/metrics-service
     container_name: metrics-service-legal
     ports:
       - "9092:9090"

@@ -10,8 +10,8 @@ version: '3.8'
 services:
   app:
     build:
-      context: ../..
-      dockerfile: accelerators-internal/healthcare-patient-portal/Dockerfile.sdk
+      context: .
+      dockerfile: Dockerfile.sdk
     container_name: healthcare-portal-sdk
     ports:
       - "3000:3000"
@@ -53,7 +53,7 @@ services:
     restart: unless-stopped
 
   gateway:
-    build: ../../acvps-gateway
+    build: ../shared/acvps-gateway
     container_name: acvps-gateway-local
     ports:
       - "8080:8080"
@@ -81,7 +81,7 @@ services:
     restart: unless-stopped
 
   metrics:
-    build: ../../metrics-service
+    build: ../shared/metrics-service
     container_name: metrics-service-local
     ports:
       - "9090:9090"

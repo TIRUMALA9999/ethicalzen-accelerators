@@ -1,0 +1,79 @@
+gateway:
+  name: "ethicalzen-gateway-cloud"
+  port: 8080
+  metrics_port: 9090
+  tls:
+    enabled: false
+
+blockchain:
+  enabled: false  # DISABLED: Not needed for current architecture
+  rpc_url: ""
+  contract_address: ""
+  cache_ttl: 0
+  timeout: 0
+  max_retries: 0
+  retry_delay: 0
+
+backend:
+  url: "https://unified-mock-backend-mqnusyobga-uc.a.run.app"
+  timeout: 30
+  max_idle_conns: 100
+  max_conns_per_host: 10
+  idle_conn_timeout: 90
+
+validation:
+  mode: "enforce"
+  require_dc_headers: true
+  enforce_failure_modes: true
+  allowed_suites: ["S0", "S1", "S2"]
+
+mitigation:
+  pii_redaction:
+    enabled: true
+    always_redact: ["ssn", "credit_card", "password"]
+  grounding:
+    enabled: false
+    min_confidence: 0.72
+    action: "warn"
+  hallucination:
+    enabled: false
+    max_risk: 0.3
+    action: "warn"
+
+cache:
+  enabled: false  # Disabled: Gateway uses in-memory cache + backend sync API
+  redis_url: "redis://REDIS_HOST_PLACEHOLDER:REDIS_PORT_PLACEHOLDER"
+  redis_password: ""
+  redis_db: 0
+  pool_size: 100
+  max_retries: 3
+
+evidence:
+  control_plane_url: "https://ethicalzen-backend-400782183161.us-central1.run.app"
+  api_key: ""
+  buffer_size: 1000
+  flush_interval: 5
+  async: true
+
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+
+metrics:
+  enabled: true
+  path: "/metrics"
+  namespace: "acvps"
+
+rate_limit:
+  enabled: false
+
+cors:
+  enabled: true
+  allowed_origins: ["*"]
+  allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+  allowed_headers: ["*"]
+  max_age: 3600
+
+dev_mode: false
+

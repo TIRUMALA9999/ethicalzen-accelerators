@@ -1,0 +1,39 @@
+# Demo configuration for EthicalZen Gateway
+# Routes to healthcare chatbot service at localhost:5000
+
+gateway:
+  port: 8443
+  mode: "passthrough"  # Transparent proxy mode
+
+backend:
+  url: "http://localhost:5000"  # Our demo Healthcare AI Chatbot
+  timeout: 30
+  max_idle_conns: 100
+  max_conns_per_host: 10
+  idle_conn_timeout: 90
+
+validation:
+  mode: "enforce"
+  require_dc_headers: false  # Demo mode - accept requests without full DC headers
+  enforce_failure_modes: true
+
+cache:
+  enabled: true
+  redis_url: "redis://localhost:6379"
+  ttl: 300
+
+blockchain:
+  rpc_url: "http://localhost:8545"
+  contract_address: "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82"
+  enabled: false  # Demo mode - skip blockchain verification
+
+telemetry:
+  enabled: true
+  endpoint: "http://localhost:8090"
+  batch_size: 100
+  flush_interval: 5
+
+log:
+  level: "info"
+  format: "json"
+
