@@ -2,6 +2,26 @@
 
 Production-ready AI application templates protected by [EthicalZen](https://ethicalzen.ai) guardrails.
 
+## 🐳 Docker Images
+
+Pre-built Docker images are available from Google Artifact Registry:
+
+| Image | Location |
+|-------|----------|
+| **Gateway** | `us-central1-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-images/acvps-gateway:latest` |
+| **Metrics** | `us-central1-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-images/metrics-service:latest` |
+
+```bash
+# Configure Docker for Google Artifact Registry (one-time setup)
+gcloud auth configure-docker us-central1-docker.pkg.dev
+
+# Pull the images
+docker pull us-central1-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-images/acvps-gateway:latest
+docker pull us-central1-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-images/metrics-service:latest
+```
+
+---
+
 ## 🚀 Quick Start
 
 Each accelerator is a complete, working AI application that demonstrates EthicalZen's AI safety guardrails in action.
