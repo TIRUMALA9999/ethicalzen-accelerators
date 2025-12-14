@@ -14,7 +14,7 @@ gateway:
     port: 80
     targetPort: 8080
   env:
-    BACKEND_URL: "https://ethicalzen-backend-400782183161.us-central1.run.app"
+    BACKEND_URL: "https://api.ethicalzen.ai"
     ETHICALZEN_API_KEY: ""
     LOG_LEVEL: "info"
     MULTI_TENANT: "true"
