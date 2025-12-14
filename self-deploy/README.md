@@ -41,24 +41,42 @@
 │                      └─────────────────┘                                         │
 │                                                                                  │
 │   ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─   │
-│                         HYBRID SYNC (outbound only)                              │
-│                               │                                                  │
-│                               ▼                                                  │
+│                         HYBRID SYNC (bidirectional)                              │
+│                               ↕                                                  │
 │   ┌─────────────────────────────────────────────────────────────────────────┐   │
 │   │                    ETHICALZEN CLOUD BACKEND                              │   │
-│   │   • Certificate management                                              │   │
-│   │   • Guardrail calibration data                                          │   │
-│   │   • Dashboard & analytics (optional)                                    │   │
+│   │                                                                          │   │
+│   │   INBOUND (Cloud → Gateway):                                            │   │
+│   │   • Certificates & Contracts                                            │   │
+│   │   • Guardrail calibrations                                              │   │
+│   │   • Configuration updates                                               │   │
+│   │                                                                          │   │
+│   │   OUTBOUND (Gateway → Cloud) - Optional:                                │   │
+│   │   • Evidence logs & audit trail                                         │   │
+│   │   • Aggregated metrics                                                  │   │
+│   │   • Dashboard analytics                                                 │   │
 │   └─────────────────────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+## 🔄 Data Flow
+
+| Direction | Data | Purpose |
+|-----------|------|---------|
+| **↓ Inbound** | Certificates | Which guardrails apply to which use cases |
+| **↓ Inbound** | Calibrations | Thresholds, embeddings for smart guardrails |
+| **↓ Inbound** | Config updates | New guardrails, tuning changes |
+| **↑ Outbound** | Evidence (optional) | Audit logs for compliance |
+| **↑ Outbound** | Metrics (optional) | Usage analytics for dashboard |
+
+> **Privacy Note**: No user prompts or responses are sent to the cloud. Only metadata (allow/block decisions, timestamps) is optionally synced.
 
 ## 🚀 Quick Start
 
 ### Option 1: Docker Compose (Simplest)
 
 ```bash
-cd accelerators/self-deploy
+cd self-deploy
 
 # Configure
 cp env.example .env
@@ -73,131 +91,89 @@ curl http://localhost:8080/health
 
 ### Option 2: Kubernetes (Helm)
 
-```bash
-cd accelerators/self-deploy
+See [HELM_DEPLOYMENT.md](./HELM_DEPLOYMENT.md) for detailed instructions.
 
-# Install Helm chart
+```bash
 helm upgrade --install ethicalzen-runtime ./helm/ethicalzen-runtime \
   -n ethicalzen-runtime --create-namespace \
   -f values/gcp.yaml \
   --set mysql.auth.password=YOUR_PASSWORD \
   --set mysql.auth.rootPassword=YOUR_ROOT_PASSWORD
-
-# Verify
-kubectl -n ethicalzen-runtime get pods
 ```
 
-### Option 3: Cloud-Managed Kubernetes
+### Option 3: Terraform + Helm (Full Infrastructure)
 
 ```bash
-cd accelerators/self-deploy
+# GCP
+cd terraform/gcp
+terraform init
+terraform apply
 
-# GCP (GKE)
-./bin/deploy.sh gcp
-
-# AWS (EKS)
-./bin/deploy.sh aws
-
-# Azure (AKS)
-./bin/deploy.sh azure
+# Then deploy Helm chart
+helm upgrade --install ethicalzen-runtime ../../helm/ethicalzen-runtime \
+  -n ethicalzen-runtime --create-namespace \
+  -f ../../values/gcp.yaml
 ```
 
 ## 📦 Components
 
 | Component | Port | Description |
 |-----------|------|-------------|
-| **Gateway** | 8080 | Main enforcement proxy |
-| **Eval Engine** | 8091 | Smart Guardrail evaluation (embeddings) |
+| **Gateway** | 8080 | Main proxy - validates requests against guardrails |
+| **Eval Engine** | 8091 | Smart guardrail evaluation (embeddings, scoring) |
 | **Metrics Service** | 8090 | Evidence logging, audit trail |
-| **Redis** | 6379 | Caching, sessions |
+| **Redis** | 6379 | Caching, rate limiting |
 | **MySQL** | 3306 | Persistent storage |
-| **Prometheus** | 9090 | Metrics (optional) |
-| **Grafana** | 3000 | Dashboards (optional) |
+| **Prometheus** | 9090 | Metrics collection (optional) |
 
-## 🔐 Configuration
+## 📚 Documentation
 
-### Environment Variables
+- [Helm Deployment Guide](./HELM_DEPLOYMENT.md)
+- [Architecture Details](./RUNTIME_ENFORCEMENT_ARCHITECTURE.md)
+- [EthicalZen Platform](https://ethicalzen.ai)
+- [API Documentation](https://docs.ethicalzen.ai)
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ETHICALZEN_API_KEY` | Yes | Your API key from portal |
-| `MYSQL_PASSWORD` | Yes | MySQL user password |
-| `MYSQL_ROOT_PASSWORD` | Yes | MySQL root password |
-| `ETHICALZEN_BACKEND_URL` | No | Cloud backend for sync (default: cloud) |
+## 📄 License
 
-### Helm Values
+MIT License - See individual directories for details.
 
-See `values/gcp.yaml`, `values/aws.yaml`, `values/azure.yaml` for cloud-specific configurations.
+---
 
-## 🧪 Testing
+## 🔒 Security & Privacy
 
-After deployment, test the gateway:
+### Data Flow Control
 
-```bash
-# Health check
-curl http://localhost:8080/health
+| Setting | Default | Effect |
+|---------|---------|--------|
+| `BACKEND_FORWARD_ENABLED` | `false` | Outbound sync disabled |
+| `METRICS_ENABLED` | `true` | Local metrics only |
 
-# Evaluate a guardrail
-curl -X POST http://localhost:8080/api/guardrails/evaluate \
-  -H "Content-Type: application/json" \
-  -H "X-API-Key: YOUR_API_KEY" \
-  -d '{
-    "guardrail_id": "medical_advice_smart",
-    "input": "I have chest pain, what should I take?"
-  }'
+### For HIPAA/PCI/SOC2 Compliance
 
-# Expected: {"decision": "block", "score": 0.77, ...}
+```yaml
+# values/hipaa-compliant.yaml
+gateway:
+  env:
+    BACKEND_FORWARD_ENABLED: "false"  # No outbound sync
+    METRICS_ENABLED: "true"           # Local metrics only
+    
+metricsService:
+  env:
+    BACKEND_FORWARD_ENABLED: "false"  # Keep all data on-premises
 ```
 
-## 📁 Directory Structure
+### Air-Gapped Deployment
 
-```
-self-deploy/
-├── README.md              # This file
-├── docker-compose.yml     # Docker Compose deployment
-├── env.example            # Environment template
-├── bin/
-│   ├── deploy.sh          # One-click cloud deploy
-│   └── destroy.sh         # Teardown
-├── helm/
-│   └── ethicalzen-runtime/
-│       ├── Chart.yaml
-│       ├── values.yaml
-│       └── templates/
-│           ├── gateway-*.yaml
-│           ├── eval-engine.yaml
-│           ├── metrics-service.yaml
-│           ├── redis.yaml
-│           └── mysql.yaml
-├── terraform/
-│   ├── gcp/               # GKE + VPC
-│   ├── aws/               # EKS + VPC
-│   └── azure/             # AKS + VNet
-└── values/
-    ├── gcp.yaml
-    ├── aws.yaml
-    └── azure.yaml
+For fully disconnected environments, the gateway can operate with:
+- Pre-loaded certificates (mounted as config)
+- Local-only calibrations
+- No internet connectivity required after initial setup
+
+```yaml
+gateway:
+  env:
+    OFFLINE_MODE: "true"
+    CERTIFICATES_PATH: "/config/certificates.json"
 ```
 
-## 🔄 Hybrid Sync Mode
-
-The gateway syncs certificates and calibration data from EthicalZen Cloud:
-
-- **Certificates**: Pulled on startup and cached
-- **Calibrations**: Updated every 5 minutes (configurable)
-- **Guardrails**: Synced from cloud repository
-
-All request/response data stays in your environment—only configuration is synced.
-
-## 🛡️ Security
-
-1. **Network Isolation**: Deploy in private subnet
-2. **TLS**: Add ingress with SSL certificates
-3. **Secrets**: Use Kubernetes secrets or Vault
-4. **Audit**: All decisions logged to MySQL
-
-## 📞 Support
-
-- Documentation: https://docs.ethicalzen.ai
-- Issues: https://github.com/ethicalzen/ethicalzen/issues
-- Email: support@ethicalzen.ai
+> **Privacy Guarantee**: User prompts and LLM responses NEVER leave your infrastructure. Only metadata (allow/block decisions) can optionally be synced.
