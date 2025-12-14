@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethicalzen-gateway
+  labels:
+    app: ethicalzen-gateway
+spec:
+  replicas: {{ .Values.gateway.replicas }}
+  selector:
+    matchLabels:
+      app: ethicalzen-gateway
+  template:
+    metadata:
+      labels:
+        app: ethicalzen-gateway
+    spec:
+      containers:
+        - name: gateway
+          image: {{ .Values.gateway.image | quote }}
+          imagePullPolicy: {{ .Values.gateway.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: metrics
+              containerPort: 9090
+          env:
+            - name: REDIS_HOST
+              value: "ethicalzen-redis"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: PORTAL_BACKEND_URL
+              value: {{ .Values.gateway.env.BACKEND_URL | quote }}
+            - name: METRICS_SERVICE_URL
+              value: "http://ethicalzen-metrics:8090"
+            - name: EVAL_ENGINE_URL
+              value: "http://ethicalzen-eval-engine:8091"
+            - name: LOG_LEVEL
+              value: {{ .Values.gateway.env.LOG_LEVEL | quote }}
+            - name: MULTI_TENANT
+              value: {{ .Values.gateway.env.MULTI_TENANT | quote }}
+            - name: ACVPS_GATEWAY_MODE
+              value: {{ .Values.gateway.env.ACVPS_GATEWAY_MODE | quote }}
+            - name: METRICS_ENABLED
+              value: {{ .Values.gateway.env.METRICS_ENABLED | quote }}
+            - name: METRICS_BATCH_SIZE
+              value: {{ .Values.gateway.env.METRICS_BATCH_SIZE | quote }}
+            - name: METRICS_BATCH_INTERVAL
+              value: {{ .Values.gateway.env.METRICS_BATCH_INTERVAL | quote }}
+            {{- if .Values.gateway.env.ETHICALZEN_API_KEY }}
+            - name: ETHICALZEN_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ethicalzen-api-secret
+                  key: api-key
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/ethicalzen
+          resources:
+            {{- toYaml .Values.gateway.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      volumes:
+        - name: config
+          configMap:
+            name: ethicalzen-gateway-config
+            items:
+              - key: config.yaml
+                path: config.yaml

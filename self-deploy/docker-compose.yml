@@ -1,0 +1,123 @@
+# AI Guardrails - Self-Service Deployment
+# 
+# Quick Start:
+#   GUARDRAIL_API_KEY="sk-your-key" docker compose up -d
+#
+# With custom LLM:
+#   GUARDRAIL_API_KEY="sk-your-key" LLM_API_KEY="sk-llm" docker compose up -d
+
+version: '3.8'
+
+services:
+  # Cache layer for performance
+  redis:
+    image: redis:7-alpine
+    container_name: guardrail-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - guardrail-internal
+
+  # Evaluation engine (semantic guardrail processing)
+  eval-engine:
+    image: us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:v4-evidence-emit
+    container_name: guardrail-eval
+    entrypoint: ["node", "/app/smart-guardrail-engine/dist/server.js"]
+    restart: unless-stopped
+    environment:
+      # Service config
+      - PORT=8091
+      - SG_PORT=8091
+      - NODE_ENV=production
+      # Backend sync
+      - PORTAL_BACKEND_URL=${BACKEND_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - ETHICALZEN_API_KEY=${GUARDRAIL_API_KEY}
+      # Cache
+      - REDIS_URL=redis://redis:6379
+      # LLM config (optional - uses cloud config if not set)
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_PROVIDER=${LLM_PROVIDER:-groq}
+      - GROQ_API_KEY=${LLM_API_KEY:-}
+      - OPENAI_API_KEY=${LLM_API_KEY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8091/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - guardrail-internal
+
+  # API Gateway (main entry point)
+  gateway:
+    image: us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:v4-evidence-emit
+    container_name: guardrail-gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      # Service config
+      - GATEWAY_HTTP_PORT=8080
+      - LOG_LEVEL=info
+      # Eval engine connection
+      - SG_ENGINE_URL=http://eval-engine:8091
+      # Backend sync
+      - PORTAL_BACKEND_URL=${BACKEND_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - ETHICALZEN_API_KEY=${GUARDRAIL_API_KEY}
+      # Cache
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      eval-engine:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - guardrail-internal
+      - guardrail-external
+
+  # Metrics (optional - Prometheus)
+  metrics:
+    image: prom/prometheus:latest
+    container_name: guardrail-metrics
+    restart: unless-stopped
+    ports:
+      - "${METRICS_PORT:-9090}:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - guardrail-internal
+      - guardrail-external
+
+networks:
+  # Internal network (services only)
+  guardrail-internal:
+    driver: bridge
+    internal: true
+  
+  # External network (gateway exposure)
+  guardrail-external:
+    driver: bridge
+
+volumes:
+  redis-data:
+  prometheus-data:

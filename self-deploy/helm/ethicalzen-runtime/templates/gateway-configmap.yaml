@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ethicalzen-gateway-config
+data:
+  config.yaml: |
+    gateway:
+      name: "ethicalzen-runtime"
+      port: 8080
+      metrics_port: 9090
+      tls:
+        enabled: false
+
+    backend:
+      url: {{ .Values.gateway.env.BACKEND_URL | quote }}
+      timeout: 30
+      max_idle_conns: 100
+      max_conns_per_host: 10
+      idle_conn_timeout: 90
+
+    cache:
+      redis_url: "redis://ethicalzen-redis:6379"
+      redis_password: ""
+      redis_db: 0
+      pool_size: 100
+      max_retries: 3
+
+    validation:
+      mode: "warn"
+      require_dc_headers: false
+      enforce_failure_modes: false
+      allowed_suites: ["S0", "S1", "S2"]
+
+    evidence:
+      control_plane_url: ""
+      api_key: ""
+      buffer_size: 1000
+      flush_interval: 5
+      async: true
+
+    logging:
+      level: "debug"
+      format: "json"
+      output: "stdout"
+
+    metrics:
+      enabled: true
+      path: "/metrics"
+      namespace: "ethicalzen"
+
+    rate_limit:
+      enabled: false
+
+    cors:
+      enabled: true
+      allowed_origins: ["*"]
+      allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+      allowed_headers: ["*"]
+      max_age: 3600
+    
+    dev_mode: true

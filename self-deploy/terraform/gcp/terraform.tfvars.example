@@ -1,0 +1,18 @@
+# GCP Project ID (required)
+project_id = "your-gcp-project-id"
+
+# Region
+region = "us-central1"
+
+# Cluster name
+cluster_name = "ethicalzen-runtime"
+
+# Network settings
+network_name = "ethicalzen-vpc"
+subnet_cidr  = "10.10.0.0/24"
+pod_cidr     = "10.20.0.0/16"
+service_cidr = "10.30.0.0/16"
+
+# Node pool settings
+node_count   = 2
+machine_type = "e2-standard-2"

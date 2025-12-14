@@ -1,0 +1,35 @@
+# Azure (AKS) Runtime Enforcement Values
+# Used with: helm upgrade --install ethicalzen-runtime ./helm/ethicalzen-runtime -f values/azure.yaml
+
+gateway:
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:latest"
+  replicas: 2
+  service:
+    type: LoadBalancer
+  env:
+    BACKEND_URL: "https://api.ethicalzen.ai"
+    LOG_LEVEL: "info"
+    MULTI_TENANT: "true"
+    ACVPS_GATEWAY_MODE: "cloud"
+
+evalEngine:
+  enabled: true
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:latest"
+  replicas: 1
+
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: "managed-premium"
+    size: "1Gi"
+
+mysql:
+  enabled: true
+  persistence:
+    enabled: true
+    storageClass: "managed-premium"
+    size: "10Gi"
+
+prometheus:
+  enabled: true

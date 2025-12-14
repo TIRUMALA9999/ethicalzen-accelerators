@@ -1,0 +1,56 @@
+# GCP Runtime Enforcement Values
+# Used with: helm upgrade --install ethicalzen-runtime ./helm/ethicalzen-runtime -f values/gcp.yaml
+
+gateway:
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:latest"
+  replicas: 2
+  env:
+    BACKEND_URL: "https://api.ethicalzen.ai"
+    ETHICALZEN_API_KEY: ""  # Set via --set gateway.env.ETHICALZEN_API_KEY=xxx
+    LOG_LEVEL: "info"
+    MULTI_TENANT: "true"
+    ACVPS_GATEWAY_MODE: "cloud"
+    METRICS_ENABLED: "true"
+    METRICS_BATCH_SIZE: "100"
+    METRICS_BATCH_INTERVAL: "5s"
+
+evalEngine:
+  enabled: true
+  # IMPORTANT: Use the same image as gateway - it contains the eval engine
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:latest"
+  replicas: 1
+  env:
+    CACHE_TTL_MS: "300000"
+    LOG_LEVEL: "info"
+
+metricsService:
+  enabled: false  # Optional - enable for detailed evidence logging
+
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    size: "1Gi"
+
+mysql:
+  enabled: true
+  persistence:
+    enabled: true
+    size: "10Gi"
+  auth:
+    database: "ethicalzen"
+    user: "ethicalzen"
+    # Set via --set mysql.auth.password=xxx --set mysql.auth.rootPassword=xxx
+    password: ""
+    rootPassword: ""
+
+prometheus:
+  enabled: true
+  service:
+    type: LoadBalancer
+  persistence:
+    enabled: true
+    size: "10Gi"
+
+grafana:
+  enabled: false

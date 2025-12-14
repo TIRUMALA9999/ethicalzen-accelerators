@@ -1,0 +1,170 @@
+{{- if .Values.mysql.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ethicalzen-mysql-secret
+type: Opaque
+stringData:
+  mysql-root-password: {{ .Values.mysql.auth.rootPassword | default "ethicalzen-root-change-me" | quote }}
+  mysql-password: {{ .Values.mysql.auth.password | default "ethicalzen-change-me" | quote }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ethicalzen-mysql
+  labels:
+    app: ethicalzen-mysql
+spec:
+  serviceName: ethicalzen-mysql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ethicalzen-mysql
+  template:
+    metadata:
+      labels:
+        app: ethicalzen-mysql
+    spec:
+      containers:
+        - name: mysql
+          image: {{ .Values.mysql.image | quote }}
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ethicalzen-mysql-secret
+                  key: mysql-root-password
+            - name: MYSQL_USER
+              value: {{ .Values.mysql.auth.user | quote }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ethicalzen-mysql-secret
+                  key: mysql-password
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.auth.database | quote }}
+          resources:
+            {{- toYaml .Values.mysql.resources | nindent 12 }}
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: init-script
+              mountPath: /docker-entrypoint-initdb.d
+          readinessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            exec:
+              command: ["mysqladmin", "ping", "-h", "localhost"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: init-script
+          configMap:
+            name: ethicalzen-mysql-init
+  {{- if .Values.mysql.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.mysql.persistence.size }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ethicalzen-mysql
+spec:
+  selector:
+    app: ethicalzen-mysql
+  ports:
+    - name: mysql
+      port: {{ .Values.mysql.service.port }}
+      targetPort: 3306
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ethicalzen-mysql-init
+data:
+  init.sql: |
+    -- EthicalZen Runtime Enforcement Schema (MySQL)
+    
+    CREATE TABLE IF NOT EXISTS evidence_logs (
+        id VARCHAR(32) PRIMARY KEY,
+        trace_id VARCHAR(64) NOT NULL,
+        contract_id VARCHAR(64),
+        tenant_id VARCHAR(64) NOT NULL,
+        policy_digest VARCHAR(128),
+        suite VARCHAR(64),
+        profile VARCHAR(64),
+        model_id VARCHAR(64),
+        safety_scores JSON,
+        latency_ms INT,
+        status VARCHAR(16) NOT NULL,
+        use_case VARCHAR(128),
+        violations JSON,
+        request_payload JSON,
+        response_payload JSON,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_evidence_tenant (tenant_id),
+        INDEX idx_evidence_timestamp (timestamp),
+        INDEX idx_evidence_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    
+    CREATE TABLE IF NOT EXISTS requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        tenant_id VARCHAR(64) NOT NULL,
+        trace_id VARCHAR(128) NOT NULL UNIQUE,
+        contract_id VARCHAR(128) NOT NULL,
+        certificate_id VARCHAR(128),
+        method VARCHAR(16) NOT NULL,
+        path VARCHAR(512) NOT NULL,
+        status_code INT NOT NULL,
+        response_time_ms INT NOT NULL,
+        request_size_bytes INT DEFAULT 0,
+        response_size_bytes INT DEFAULT 0,
+        user_agent VARCHAR(512),
+        ip_address VARCHAR(64),
+        INDEX idx_requests_timestamp (timestamp DESC),
+        INDEX idx_requests_tenant (tenant_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    
+    CREATE TABLE IF NOT EXISTS violations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+        tenant_id VARCHAR(64) NOT NULL,
+        trace_id VARCHAR(128) NOT NULL,
+        contract_id VARCHAR(128) NOT NULL,
+        certificate_id VARCHAR(128),
+        violation_type VARCHAR(64) NOT NULL,
+        metric_name VARCHAR(64) NOT NULL,
+        metric_value FLOAT NOT NULL,
+        threshold_min FLOAT,
+        threshold_max FLOAT,
+        severity VARCHAR(16) DEFAULT 'medium',
+        details TEXT,
+        INDEX idx_violations_timestamp (timestamp DESC),
+        INDEX idx_violations_tenant (tenant_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    
+    CREATE TABLE IF NOT EXISTS guardrail_calibrations (
+        id VARCHAR(64) PRIMARY KEY,
+        guardrail_id VARCHAR(64) NOT NULL,
+        tenant_id VARCHAR(64),
+        calibration_data JSON NOT NULL,
+        version INT DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_calibrations_guardrail (guardrail_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+{{- end }}

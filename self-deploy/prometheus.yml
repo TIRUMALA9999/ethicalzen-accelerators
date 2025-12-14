@@ -1,0 +1,16 @@
+# Prometheus configuration for AI Guardrails monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'gateway'
+    static_configs:
+      - targets: ['gateway:8080']
+    metrics_path: /metrics
+
+  - job_name: 'eval-engine'
+    static_configs:
+      - targets: ['eval-engine:8091']
+    metrics_path: /metrics
+

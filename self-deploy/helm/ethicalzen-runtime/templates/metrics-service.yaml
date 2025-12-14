@@ -1,0 +1,79 @@
+{{- if .Values.metricsService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethicalzen-metrics
+  labels:
+    app: ethicalzen-metrics
+spec:
+  replicas: {{ .Values.metricsService.replicas }}
+  selector:
+    matchLabels:
+      app: ethicalzen-metrics
+  template:
+    metadata:
+      labels:
+        app: ethicalzen-metrics
+    spec:
+      containers:
+        - name: metrics-service
+          image: {{ .Values.metricsService.image | quote }}
+          ports:
+            - containerPort: 8090
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "8090"
+            - name: DB_TYPE
+              value: {{ .Values.metricsService.env.DB_TYPE | quote }}
+            - name: MYSQL_HOST
+              value: "ethicalzen-mysql"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_USER
+              value: {{ .Values.mysql.auth.user | quote }}
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ethicalzen-mysql-secret
+                  key: mysql-password
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mysql.auth.database | quote }}
+            - name: REDIS_URL
+              value: "redis://ethicalzen-redis:6379"
+            - name: RETENTION_DAYS
+              value: {{ .Values.metricsService.env.RETENTION_DAYS | quote }}
+            - name: BATCH_SIZE
+              value: {{ .Values.metricsService.env.BATCH_SIZE | quote }}
+            - name: FLUSH_INTERVAL_MS
+              value: {{ .Values.metricsService.env.FLUSH_INTERVAL_MS | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.metricsService.env.LOG_LEVEL | quote }}
+          resources:
+            {{- toYaml .Values.metricsService.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8090
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ethicalzen-metrics
+spec:
+  selector:
+    app: ethicalzen-metrics
+  ports:
+    - name: http
+      port: {{ .Values.metricsService.service.port }}
+      targetPort: 8090
+{{- end }}

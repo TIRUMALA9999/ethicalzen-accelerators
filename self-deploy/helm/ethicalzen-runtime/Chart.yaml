@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ethicalzen-runtime
+description: EthicalZen runtime enforcement stack (gateway + optional redis/control-plane)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

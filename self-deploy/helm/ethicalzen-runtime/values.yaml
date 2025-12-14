@@ -1,0 +1,120 @@
+# =============================================================================
+# EthicalZen Runtime Enforcement - Helm Values
+# =============================================================================
+
+# =============================================================================
+# Gateway Configuration
+# =============================================================================
+gateway:
+  enabled: true
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:latest"
+  replicas: 2
+  service:
+    type: LoadBalancer
+    port: 80
+    targetPort: 8080
+  env:
+    BACKEND_URL: "https://ethicalzen-backend-400782183161.us-central1.run.app"
+    ETHICALZEN_API_KEY: ""
+    LOG_LEVEL: "info"
+    MULTI_TENANT: "true"
+    ACVPS_GATEWAY_MODE: "cloud"
+    METRICS_ENABLED: "true"
+    METRICS_BATCH_SIZE: "100"
+    METRICS_BATCH_INTERVAL: "5s"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# =============================================================================
+# Eval Engine (Smart Guardrails)
+# =============================================================================
+evalEngine:
+  enabled: true
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/acvps-gateway:latest"
+  replicas: 1
+  service:
+    port: 8091
+  env:
+    CACHE_TTL_MS: "300000"
+    LOG_LEVEL: "info"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# =============================================================================
+# Metrics Service (Evidence Logging)
+# =============================================================================
+metricsService:
+  enabled: false
+  image: "us-central1-docker.pkg.dev/ethicalzen-public-04085/cloud-run-source-deploy/metrics-service:latest"
+  replicas: 1
+  service:
+    port: 8090
+  env:
+    DB_TYPE: "mysql"
+    MYSQL_HOST: "mysql"
+    MYSQL_PORT: "3306"
+    MYSQL_DATABASE: "ethicalzen"
+
+# =============================================================================
+# Redis (Caching)
+# =============================================================================
+redis:
+  enabled: true
+  image: "redis:7-alpine"
+  replicas: 1
+  service:
+    port: 6379
+  persistence:
+    enabled: true
+    size: "1Gi"
+
+# =============================================================================
+# MySQL (Persistence)
+# =============================================================================
+mysql:
+  enabled: true
+  image: "mysql:8.0"
+  service:
+    port: 3306
+  auth:
+    database: "ethicalzen"
+    username: "ethicalzen"
+    password: ""
+    rootPassword: ""
+  persistence:
+    enabled: true
+    size: "10Gi"
+
+# =============================================================================
+# Prometheus (Metrics Collection)
+# =============================================================================
+prometheus:
+  enabled: true
+  image: "prom/prometheus:v2.47.0"
+  service:
+    type: LoadBalancer
+    port: 9090
+  persistence:
+    enabled: true
+    size: "10Gi"
+
+# =============================================================================
+# Grafana (Dashboards - Optional)
+# =============================================================================
+grafana:
+  enabled: false
+  image: "grafana/grafana:latest"
+  service:
+    type: LoadBalancer
+    port: 3000
+  adminPassword: "admin"

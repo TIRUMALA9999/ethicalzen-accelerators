@@ -1,0 +1,63 @@
+{{- if .Values.evalEngine.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ethicalzen-eval-engine
+  labels:
+    app: ethicalzen-eval-engine
+spec:
+  replicas: {{ .Values.evalEngine.replicas }}
+  selector:
+    matchLabels:
+      app: ethicalzen-eval-engine
+  template:
+    metadata:
+      labels:
+        app: ethicalzen-eval-engine
+    spec:
+      containers:
+        - name: eval-engine
+          image: {{ .Values.evalEngine.image | quote }}
+          command: ["node", "/app/smart-guardrail-engine/dist/server.js"]
+          ports:
+            - containerPort: 8091
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: SG_PORT
+              value: "8091"
+            - name: REDIS_URL
+              value: "redis://ethicalzen-redis:6379"
+            - name: BACKEND_URL
+              value: {{ .Values.gateway.env.BACKEND_URL | quote }}
+            - name: CACHE_TTL_MS
+              value: {{ .Values.evalEngine.env.CACHE_TTL_MS | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.evalEngine.env.LOG_LEVEL | quote }}
+          resources:
+            {{- toYaml .Values.evalEngine.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8091
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8091
+            initialDelaySeconds: 30
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ethicalzen-eval-engine
+spec:
+  selector:
+    app: ethicalzen-eval-engine
+  ports:
+    - name: http
+      port: {{ .Values.evalEngine.service.port }}
+      targetPort: 8091
+{{- end }}
