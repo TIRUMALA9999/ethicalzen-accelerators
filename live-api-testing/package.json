@@ -1,0 +1,31 @@
+{
+  "name": "@ethicalzen/live-api-testing-accelerator",
+  "version": "1.0.0",
+  "description": "Retrofit guardrails on existing AI APIs with live testing",
+  "main": "src/demo.js",
+  "scripts": {
+    "demo": "node src/demo.js",
+    "interactive": "node src/interactive-demo.js",
+    "test-api": "node src/test-your-api.js",
+    "ci": "node src/ci-integration.js"
+  },
+  "keywords": [
+    "ethicalzen",
+    "guardrails",
+    "ai-safety",
+    "openapi",
+    "live-testing",
+    "compliance"
+  ],
+  "author": "EthicalZen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aiworksllc/ethicalzen-accelerators.git",
+    "directory": "accelerators/live-api-testing"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+
