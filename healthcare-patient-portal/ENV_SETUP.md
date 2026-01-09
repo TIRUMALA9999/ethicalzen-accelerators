@@ -59,7 +59,7 @@ LLM_MODEL=llama-3.3-70b-versatile
 ETHICALZEN_API_KEY=sk-demo-public-playground-ethicalzen
 ETHICALZEN_CERTIFICATE_ID=Healthcare Patient Portal Test/healthcare/us/v1.0
 ETHICALZEN_TENANT_ID=demo
-ETHICALZEN_PORTAL_URL=https://ethicalzen-backend-400782183161.us-central1.run.app
+ETHICALZEN_PORTAL_URL=https://api.ethicalzen.ai
 
 # ============================================================================
 # Application Settings (Optional - defaults provided)
@@ -115,7 +115,7 @@ echo $LLM_PROVIDER
 For production deployments:
 
 1. **Register your own EthicalZen account**
-   - Go to https://ethicalzen-backend-400782183161.us-central1.run.app
+   - Go to https://api.ethicalzen.ai
    - Register a use case for your application
    - Get your production API key and certificate ID
 

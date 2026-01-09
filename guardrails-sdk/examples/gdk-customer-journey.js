@@ -21,7 +21,7 @@ const https = require('https');
 // ═══════════════════════════════════════════════════════════════════════════
 
 const CONFIG = {
-  baseUrl: process.env.GDK_API_URL || 'https://ethicalzen-backend-400782183161.us-central1.run.app',
+  baseUrl: process.env.GDK_API_URL || 'https://api.ethicalzen.ai',
   apiKey: process.env.GDK_API_KEY || 'sk-demo-public-playground-ethicalzen',
   targetAccuracy: 0.80
 };

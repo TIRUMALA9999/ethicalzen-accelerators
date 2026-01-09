@@ -13,7 +13,7 @@ const http = require('http');
 const readline = require('readline');
 
 const ETHICALZEN_API_KEY = process.env.ETHICALZEN_API_KEY || 'sk-demo-public-playground-ethicalzen';
-const BASE_URL = process.env.ETHICALZEN_URL || 'https://ethicalzen-backend-400782183161.us-central1.run.app';
+const BASE_URL = process.env.ETHICALZEN_URL || 'https://api.ethicalzen.ai';
 
 const colors = {
   reset: '\x1b[0m',

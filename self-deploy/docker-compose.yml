@@ -36,7 +36,7 @@ services:
       - SG_PORT=8091
       - NODE_ENV=production
       # Backend sync
-      - PORTAL_BACKEND_URL=${BACKEND_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - PORTAL_BACKEND_URL=${BACKEND_URL:-https://api.ethicalzen.ai}
       - ETHICALZEN_API_KEY=${GUARDRAIL_API_KEY}
       # Cache
       - REDIS_URL=redis://redis:6379
@@ -71,7 +71,7 @@ services:
       # Eval engine connection
       - SG_ENGINE_URL=http://eval-engine:8091
       # Backend sync
-      - PORTAL_BACKEND_URL=${BACKEND_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - PORTAL_BACKEND_URL=${BACKEND_URL:-https://api.ethicalzen.ai}
       - ETHICALZEN_API_KEY=${GUARDRAIL_API_KEY}
       # Cache
       - REDIS_URL=redis://redis:6379

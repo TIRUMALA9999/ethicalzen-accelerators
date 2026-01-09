@@ -5,8 +5,8 @@ metadata:
   name: ethicalzen-mysql-secret
 type: Opaque
 stringData:
-  mysql-root-password: {{ .Values.mysql.auth.rootPassword | default "ethicalzen-root-change-me" | quote }}
-  mysql-password: {{ .Values.mysql.auth.password | default "ethicalzen-change-me" | quote }}
+  mysql-root-password: {{ required "mysql.auth.rootPassword is required - set via --set mysql.auth.rootPassword=YOUR_PASSWORD" .Values.mysql.auth.rootPassword | quote }}
+  mysql-password: {{ required "mysql.auth.password is required - set via --set mysql.auth.password=YOUR_PASSWORD" .Values.mysql.auth.password | quote }}
 ---
 apiVersion: apps/v1
 kind: StatefulSet

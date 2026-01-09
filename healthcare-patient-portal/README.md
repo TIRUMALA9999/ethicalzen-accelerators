@@ -25,7 +25,7 @@ This accelerator demonstrates how to build a secure healthcare chatbot that:
    - See [DOCKER_IMAGES_SETUP.md](./DOCKER_IMAGES_SETUP.md) for detailed instructions
 
 2. **EthicalZen Account** (Free Demo Available)
-   - Go to https://ethicalzen-backend-400782183161.us-central1.run.app
+   - Go to https://api.ethicalzen.ai
    - Register a use case to get your API key and certificate ID
    - OR use the demo credentials provided below
 

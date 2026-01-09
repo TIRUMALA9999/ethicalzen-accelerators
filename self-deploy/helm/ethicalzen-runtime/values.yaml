@@ -117,4 +117,4 @@ grafana:
   service:
     type: LoadBalancer
     port: 3000
-  adminPassword: "admin"
+  adminPassword: ""  # Required: Set via --set grafana.adminPassword=YOUR_PASSWORD

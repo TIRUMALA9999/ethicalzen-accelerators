@@ -42,8 +42,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - BACKEND_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
-      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - BACKEND_URL=${ETHICALZEN_PORTAL_URL:-https://api.ethicalzen.ai}
+      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://api.ethicalzen.ai}
       - API_KEY=${ETHICALZEN_API_KEY:-sk-demo-public-playground-ethicalzen}
       - TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
       - PORT=8080
@@ -69,7 +69,7 @@ services:
     ports:
       - "9090:9090"
     environment:
-      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+      - PORTAL_URL=${ETHICALZEN_PORTAL_URL:-https://api.ethicalzen.ai}
       - API_KEY=${ETHICALZEN_API_KEY:-sk-test-local-key}
       - TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
       - PORT=9090

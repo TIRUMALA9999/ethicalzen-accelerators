@@ -73,7 +73,7 @@ Validate the healthcare accelerator with 5 diverse use cases covering:
 - App: `healthcare-portal` (port 3000)
 
 **Configuration:**
-- Backend URL: https://ethicalzen-backend-400782183161.us-central1.run.app
+- Backend URL: https://api.ethicalzen.ai
 - Certificate ID: Healthcare Patient Portal Test/healthcare/us/v1.0
 - Tenant ID: demo
 - API Key: sk-demo-public-playground-ethicalzen

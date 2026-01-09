@@ -28,7 +28,7 @@ const config = {
   timeout: parseInt(process.env.TEST_TIMEOUT || '30000')
 };
 
-const BASE_URL = process.env.ETHICALZEN_URL || 'https://ethicalzen-backend-400782183161.us-central1.run.app';
+const BASE_URL = process.env.ETHICALZEN_URL || 'https://api.ethicalzen.ai';
 
 // Validate required config
 function validateConfig() {

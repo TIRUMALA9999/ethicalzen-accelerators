@@ -96,7 +96,7 @@ create_env() {
 GUARDRAIL_API_KEY=${GUARDRAIL_API_KEY}
 
 # Backend URL
-BACKEND_URL=${BACKEND_URL:-https://ethicalzen-backend-400782183161.us-central1.run.app}
+BACKEND_URL=${BACKEND_URL:-https://api.ethicalzen.ai}
 
 # Ports
 GATEWAY_PORT=${GATEWAY_PORT:-8080}
