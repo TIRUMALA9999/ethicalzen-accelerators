@@ -56,10 +56,64 @@ ETHICALZEN_API_KEY=sk-your-key node src/demo.js
 
 ---
 
+## 🔍 Analyze Your API (Interactive)
+
+Get a per-endpoint risk analysis and guardrail recommendations:
+
+```bash
+node src/analyze-api.js https://your-api.com/openapi.json
+```
+
+### Example Output
+
+```
+🔍 ETHICALZEN API ANALYZER
+
+STEP 1: IMPORTING OPENAPI SPECIFICATION
+✅ Successfully imported: Your API
+   📊 Total Endpoints: 15
+   🤖 AI Endpoints:    3
+
+STEP 2: PER-ENDPOINT RISK ANALYSIS
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ POST   /v1/chat/completions
+│ Risk Level: 🔴 CRITICAL
+└─────────────────────────────────────────────────────────────────────┘
+   ⚠️  Key Issues:
+      🔴 AI/LLM endpoint - requires input/output guardrails
+      🔴 Data mutation endpoint - input validation needed
+
+   🛡️  Recommended Guardrails:
+      ✓ Prompt Injection Blocker
+      ✓ Toxicity Detector
+      ✓ PII Blocker
+      ✓ Content Moderation
+
+┌─────────────────────────────────────────────────────────────────────┐
+│ GET    /user/{id}
+│ Risk Level: 🟠 HIGH
+└─────────────────────────────────────────────────────────────────────┘
+   ⚠️  Key Issues:
+      🟠 User data handling - PII exposure risk
+
+   🛡️  Recommended Guardrails:
+      ✓ PII Blocker
+      ✓ Data Leakage Prevention
+
+STEP 3: SUMMARY
+   Critical Risk Endpoints: 1
+   High Risk Endpoints:     2
+   Unique Guardrails Needed: 6
+```
+
+---
+
 ## Files Included
 
 | File | Description |
 |------|-------------|
+| `src/analyze-api.js` | **Interactive analyzer** - takes Swagger URL, shows per-endpoint breakdown |
 | `src/demo.js` | Quick demo using httpbin |
 | `src/test-your-api.js` | Template to test your own API |
 | `src/ci-integration.js` | CI/CD pipeline integration |
