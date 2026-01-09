@@ -58,13 +58,11 @@ ETHICALZEN_API_KEY=sk-your-key node src/demo.js
 
 ## 🔍 Analyze Your API (Interactive)
 
-Get a per-endpoint risk analysis and guardrail recommendations powered by **LLM-based analysis**:
+Get a per-endpoint risk analysis and guardrail recommendations:
 
 ```bash
 node src/analyze-api.js https://your-api.com/openapi.json
 ```
-
-> **Note:** No LLM API keys required! EthicalZen's backend provides AI-powered analysis.
 
 ### Example Output
 
