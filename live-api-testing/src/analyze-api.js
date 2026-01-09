@@ -2,15 +2,17 @@
 /**
  * Interactive API Analyzer
  * 
- * Analyzes your OpenAPI/Swagger spec and provides:
+ * Analyzes your OpenAPI/Swagger spec using LLM-powered analysis and provides:
  * - Per-endpoint risk analysis
  * - Recommended guardrails for each endpoint
  * - Key issues identified
  * - Compliance gaps
  * 
+ * NOTE: No LLM API keys required! EthicalZen's backend provides the AI analysis.
+ * 
  * Usage:
  *   node src/analyze-api.js https://petstore3.swagger.io/api/v3/openapi.json
- *   node src/analyze-api.js ./my-api-spec.json
+ *   node src/analyze-api.js https://your-api.com/openapi.json
  */
 
 const https = require('https');
@@ -180,7 +182,7 @@ async function analyzeAPI(specSource) {
   log('╔═══════════════════════════════════════════════════════════════════════╗', 'cyan');
   log('║                                                                       ║', 'cyan');
   log('║   🔍 ETHICALZEN API ANALYZER                                          ║', 'cyan');
-  log('║   Per-Endpoint Risk Analysis & Guardrail Recommendations              ║', 'cyan');
+  log('║   LLM-Powered Risk Analysis & Guardrail Recommendations               ║', 'cyan');
   log('║                                                                       ║', 'cyan');
   log('╚═══════════════════════════════════════════════════════════════════════╝', 'cyan');
   
