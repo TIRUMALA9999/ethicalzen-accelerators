@@ -33,7 +33,7 @@
     "helmet": "^7.1.0",
     "express-rate-limit": "^7.1.5",
     "openai": "^4.20.0",
-    "@ethicalzen/sdk": "^1.0.0"
+    "ethicalzensdk": "latest"
   },
   "devDependencies": {
     "jest": "^29.7.0",
