@@ -15,8 +15,6 @@
 # For production/HIPAA/regulated: Use docker-compose.local.yml instead
 # ============================================================================
 
-version: '3.8'
-
 services:
   app:
     build: .
@@ -42,9 +40,6 @@ services:
       - INDUSTRY=${INDUSTRY:-healthcare}
       - REGION=${REGION:-us}
       - DATA_SENSITIVITY=${DATA_SENSITIVITY:-PHI,PII}
-    volumes:
-      - ./app:/app
-      - /app/node_modules
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
