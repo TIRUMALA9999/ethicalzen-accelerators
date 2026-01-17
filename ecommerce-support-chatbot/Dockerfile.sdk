@@ -2,22 +2,26 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY sdk/ ./sdk/
+# Copy package files
+COPY package.json ./
+COPY package-lock.json* ./
 
-WORKDIR /app/sdk
-RUN npm ci
-RUN npm run build
-RUN npm link
+# Install dependencies (SDK from npm registry)
+RUN npm install --omit=dev
 
-WORKDIR /app/accelerator
-COPY accelerators-internal/ecommerce-support-chatbot/package*.json ./
-RUN npm install
-RUN npm link @ethicalzen/sdk
+# Copy application code
+COPY app/ ./app/
+COPY ethicalzen-config.json ./
 
-COPY accelerators-internal/ecommerce-support-chatbot/ ./
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Run as non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+RUN chown -R nodejs:nodejs /app
+USER nodejs
 
 EXPOSE 3000
 
 CMD ["node", "app/server-sdk.js"]
-

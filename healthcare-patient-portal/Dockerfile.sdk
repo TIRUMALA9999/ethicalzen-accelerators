@@ -2,24 +2,16 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy SDK first (for local dependency)
-COPY sdk /sdk
-WORKDIR /sdk
-RUN npm install && npm run build
+# Copy package files
+COPY package.json ./
+COPY package-lock.json* ./
 
-# Copy app files
-WORKDIR /app
-COPY accelerators-internal/healthcare-patient-portal/package.json ./
-
-# Update package.json to use /sdk instead of ../../sdk
-RUN sed -i 's|file:../../sdk|file:/sdk|g' package.json
-
-# Install dependencies
-RUN npm install --production
+# Install dependencies (SDK from npm registry)
+RUN npm install --omit=dev
 
 # Copy application code
-COPY accelerators-internal/healthcare-patient-portal/app/ ./app/
-COPY accelerators-internal/healthcare-patient-portal/ethicalzen-config.json ./
+COPY app/ ./app/
+COPY ethicalzen-config.json ./
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
