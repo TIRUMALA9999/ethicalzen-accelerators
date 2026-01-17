@@ -16,6 +16,6 @@
     "axios": "^1.6.0",
     "helmet": "^7.1.0",
     "express-rate-limit": "^7.1.5",
-    "ethicalzensdk": "latest"
+    "@ethicalzen/sdk": "latest"
   }
 }

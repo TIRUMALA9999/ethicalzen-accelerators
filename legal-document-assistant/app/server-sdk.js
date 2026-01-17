@@ -3,7 +3,7 @@
  * Protected by EthicalZen guardrails for legal compliance
  */
 
-const { EthicalZenProxyClient } = require('ethicalzensdk');
+const { EthicalZenProxyClient } = require('@ethicalzen/sdk');
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
