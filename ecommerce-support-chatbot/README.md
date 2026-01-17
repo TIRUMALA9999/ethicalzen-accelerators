@@ -1,6 +1,6 @@
 # E-Commerce Support Chatbot - EthicalZen Accelerator
 
-**Status:** ⏳ **Pending Testing**  
+**Status:** ⏳ **Ready for Testing**  
 **Industry:** E-Commerce  
 **Compliance:** PCI-DSS, GDPR, CCPA
 
@@ -16,11 +16,37 @@ A customer support chatbot for e-commerce protected by EthicalZen guardrails.
 ## 🚀 Quick Start
 
 ```bash
-export GROQ_API_KEY="your-groq-key"
-docker compose -f docker-compose.test.yml up -d
+# Clone and navigate
+git clone https://github.com/aiworksllc/ethicalzen-accelerators.git
+cd ethicalzen-accelerators/ecommerce-support-chatbot
+
+# Configure environment
+cp .env.example .env
+# Edit .env and set your GROQ_API_KEY (or other LLM key)
+
+# Start services
+docker compose -f docker-compose.sdk.yml up -d
+
+# Test
 curl -X POST http://localhost:3000/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "How do I track my order?"}'
 ```
 
-See parent README and template guide for full setup instructions.
+## 📊 Architecture
+
+```
+E-Commerce App (Port 3000)
+    ↓
+EthicalZen Gateway (Port 8080)
+    ↓
+Metrics Service (Port 9090)
+```
+
+## 🔧 Configuration
+
+See [healthcare-patient-portal README](../healthcare-patient-portal/README.md) for detailed configuration options.
+
+## 📜 License
+
+MIT License
