@@ -8,27 +8,54 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* Light Theme (matches ethicalzen.ai) */
         :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-tertiary: #1a1a24;
-            --bg-card: #16161f;
-            --border: #2a2a3a;
-            --border-focus: #4f46e5;
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #8b5cf6;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f9fafb;
+            --bg-tertiary: #f3f4f6;
+            --bg-card: #ffffff;
+            --border: #e5e7eb;
+            --border-focus: #6366f1;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
             --accent: #6366f1;
-            --accent-hover: #818cf8;
+            --accent-hover: #4f46e5;
             --success: #10b981;
             --success-bg: rgba(16, 185, 129, 0.1);
             --warning: #f59e0b;
             --warning-bg: rgba(245, 158, 11, 0.1);
             --danger: #ef4444;
             --danger-bg: rgba(239, 68, 68, 0.1);
-            --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             --gradient-2: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            --shadow-glow: 0 0 60px rgba(99, 102, 241, 0.08);
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Dark Theme */
+        [data-theme="dark"] {
+            --primary: #818cf8;
+            --primary-dark: #6366f1;
+            --primary-light: #a5b4fc;
+            --secondary: #8b5cf6;
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --bg-card: #1e293b;
+            --border: #334155;
+            --border-focus: #6366f1;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #94a3b8;
+            --accent: #818cf8;
+            --accent-hover: #a5b4fc;
             --shadow-glow: 0 0 60px rgba(99, 102, 241, 0.15);
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
 
         * {
@@ -43,9 +70,10 @@
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* Background Pattern */
+        /* Background Pattern - Light */
         body::before {
             content: '';
             position: fixed;
@@ -54,10 +82,18 @@
             right: 0;
             bottom: 0;
             background: 
-                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
-                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139, 92, 246, 0.1), transparent);
+                radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.06) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 40%);
             pointer-events: none;
             z-index: 0;
+        }
+
+        /* Background Pattern - Dark */
+        [data-theme="dark"] body::before,
+        body[data-theme="dark"]::before {
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139, 92, 246, 0.08), transparent);
         }
 
         /* Header */
@@ -65,10 +101,15 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(10, 10, 15, 0.8);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
             padding: 1rem 2rem;
+            transition: background 0.3s;
+        }
+
+        [data-theme="dark"] .header {
+            background: rgba(15, 23, 42, 0.95);
         }
 
         .header-content {
@@ -152,6 +193,26 @@
             background: var(--bg-card);
         }
 
+        /* Theme Toggle */
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary);
+        }
+
         /* Main Layout */
         .main {
             position: relative;
@@ -204,10 +265,11 @@
             border-radius: 16px;
             padding: 1.5rem;
             transition: all 0.3s ease;
+            box-shadow: var(--card-shadow);
         }
 
         .card:hover {
-            border-color: rgba(99, 102, 241, 0.3);
+            border-color: var(--primary-light);
             box-shadow: var(--shadow-glow);
         }
 
@@ -914,6 +976,7 @@
                     GitHub
                 </a>
                 <a href="https://ethicalzen.ai/docs" target="_blank" class="btn btn-ghost">Docs</a>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌓</button>
                 <button class="btn btn-secondary" onclick="showApiKeyModal()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
                     API Key
@@ -1159,6 +1222,31 @@
             safeExamples: [],
             unsafeExamples: []
         };
+
+        // Theme toggle (matches ethicalzen.ai)
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.querySelector('.theme-toggle').textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Initialize theme from localStorage or system preference
+        (function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = savedTheme || (systemDark ? 'dark' : 'light');
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+            // Update toggle icon after DOM loads
+            document.addEventListener('DOMContentLoaded', () => {
+                const toggle = document.querySelector('.theme-toggle');
+                if (toggle) toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            });
+        })();
 
         // Templates
         const templates = {
