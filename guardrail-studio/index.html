@@ -1,0 +1,2052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardrail Studio | EthicalZen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a24;
+            --bg-card: #16161f;
+            --border: #2a2a3a;
+            --border-focus: #4f46e5;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.1);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            --gradient-2: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+            --shadow-glow: 0 0 60px rgba(99, 102, 241, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99, 102, 241, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(139, 92, 246, 0.1), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-1);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+        }
+
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--border-focus);
+            background: var(--bg-card);
+        }
+
+        /* Main Layout */
+        .main {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+            min-height: calc(100vh - 80px);
+        }
+
+        @media (max-width: 1200px) {
+            .main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Design Panel */
+        .design-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-header {
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .panel-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background: var(--accent);
+            color: white;
+            font-weight: 500;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9375rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 140px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        /* Examples Section */
+        .examples-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .example-box {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+        }
+
+        .example-box.safe {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .example-box.unsafe {
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .example-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .example-box.safe .example-header {
+            color: var(--success);
+        }
+
+        .example-box.unsafe .example-header {
+            color: var(--danger);
+        }
+
+        .example-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .example-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .example-item input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+
+        .example-item input:focus {
+            outline: none;
+        }
+
+        .example-item button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .example-item:hover button {
+            opacity: 1;
+        }
+
+        .add-example {
+            width: 100%;
+            padding: 0.5rem;
+            background: transparent;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-example:hover {
+            border-color: var(--text-muted);
+            color: var(--text-secondary);
+        }
+
+        /* Generate Button */
+        .generate-section {
+            margin-top: 1rem;
+        }
+
+        .btn-generate {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-generate:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-generate .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        .btn-generate.loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-generate.loading .btn-text {
+            opacity: 0;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .preview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            padding: 1.25rem 1.5rem;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .preview-status {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .preview-status.ready {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .preview-status.draft {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .preview-body {
+            padding: 1.5rem;
+        }
+
+        /* Metrics */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 0.25rem;
+        }
+
+        /* Test Playground */
+        .playground {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .playground-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .test-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .test-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.875rem;
+        }
+
+        .test-input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+        }
+
+        .btn-test {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-test:hover {
+            border-color: var(--accent);
+            background: var(--bg-card);
+        }
+
+        /* Test Result */
+        .test-result {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 1rem;
+            display: none;
+        }
+
+        .test-result.visible {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .test-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .test-decision {
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .test-decision.allow {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .test-decision.block {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .test-decision.review {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .test-score {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .test-explanation {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Export Section */
+        .export-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-export {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-export:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        /* Template Gallery */
+        .templates-section {
+            margin-top: 2rem;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .template-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .template-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .template-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .template-accuracy {
+            font-size: 0.75rem;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 0.9rem;
+        }
+
+        /* Template Match Banner */
+        .template-match-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .match-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .match-content {
+            flex: 1;
+        }
+
+        .match-title {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .match-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+            line-height: 1.5;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        /* API Key Modal */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-backdrop.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 420px;
+            width: 90%;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">🛡️</div>
+                <span>Guardrail Studio</span>
+            </a>
+            <div class="header-actions">
+                <a href="https://github.com/ethicalzen/guardrail-sdk" target="_blank" class="btn btn-ghost">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+                <a href="https://ethicalzen.ai/docs" target="_blank" class="btn btn-ghost">Docs</a>
+                <button class="btn btn-secondary" onclick="showApiKeyModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                    API Key
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- Design Panel -->
+        <div class="design-panel">
+            <div class="panel-header">
+                <h1 class="panel-title">Contribute a Guardrail</h1>
+                <p class="panel-subtitle">Help grow the community guardrail library. We'll first check if existing templates can solve your need—either directly or as a composite.</p>
+            </div>
+            
+            <!-- Template Match Banner (hidden by default, shown after analysis) -->
+            <div id="templateMatchBanner" class="template-match-banner" style="display: none;">
+                <div class="match-icon">🔍</div>
+                <div class="match-content">
+                    <div class="match-title">Analyzing existing templates...</div>
+                    <div class="match-subtitle" id="matchSubtitle">Checking for matches before creating a new guardrail</div>
+                </div>
+            </div>
+
+            <!-- Description Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        Description
+                    </span>
+                    <span class="card-badge">Required</span>
+                </div>
+                <div class="form-group">
+                    <textarea 
+                        id="description" 
+                        class="form-textarea" 
+                        placeholder="Example: Block AI from providing specific medical diagnoses, prescriptions, or treatment recommendations. Allow general health education and wellness tips."
+                    ></textarea>
+                    <p class="form-hint">Be specific about what to block AND what to allow. This helps the AI generate better test cases.</p>
+                </div>
+            </div>
+
+            <!-- Examples Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        Training Examples
+                    </span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Optional but recommended</span>
+                </div>
+                
+                <div class="examples-grid">
+                    <!-- Safe Examples -->
+                    <div class="example-box safe">
+                        <div class="example-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            Safe (Allow)
+                        </div>
+                        <div class="example-list" id="safeExamples">
+                            <!-- Examples added dynamically -->
+                        </div>
+                        <button class="add-example" onclick="addExample('safe')">+ Add safe example</button>
+                    </div>
+
+                    <!-- Unsafe Examples -->
+                    <div class="example-box unsafe">
+                        <div class="example-header">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                            Unsafe (Block)
+                        </div>
+                        <div class="example-list" id="unsafeExamples">
+                            <!-- Examples added dynamically -->
+                        </div>
+                        <button class="add-example" onclick="addExample('unsafe')">+ Add unsafe example</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <div class="generate-section">
+                <button class="btn-generate" id="generateBtn" onclick="generateGuardrail()">
+                    <span class="btn-text">✨ Generate Guardrail</span>
+                    <span class="spinner"></span>
+                </button>
+            </div>
+
+            <!-- Templates Section -->
+            <div class="templates-section">
+                <div class="section-header">
+                    <h3 class="section-title">Start from a Template</h3>
+                    <a href="#" class="btn btn-ghost" style="font-size: 0.8rem;">View all →</a>
+                </div>
+                <div class="template-grid">
+                    <div class="template-card" onclick="loadTemplate('financial')">
+                        <div class="template-icon">💰</div>
+                        <div class="template-name">Financial Advice</div>
+                        <div class="template-accuracy">99% accuracy</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('medical')">
+                        <div class="template-icon">🏥</div>
+                        <div class="template-name">Medical Advice</div>
+                        <div class="template-accuracy">77% accuracy</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('legal')">
+                        <div class="template-icon">⚖️</div>
+                        <div class="template-name">Legal Advice</div>
+                        <div class="template-accuracy">75% accuracy</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('academic')">
+                        <div class="template-icon">📚</div>
+                        <div class="template-name">Academic Integrity</div>
+                        <div class="template-accuracy">77% accuracy</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview Panel -->
+        <div class="preview-panel">
+            <div class="preview-card">
+                <div class="preview-header">
+                    <span class="preview-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Guardrail Preview
+                    </span>
+                    <span class="preview-status draft" id="previewStatus">Draft</span>
+                </div>
+                <div class="preview-body">
+                    <div id="emptyState" class="empty-state">
+                        <div class="empty-state-icon">🛡️</div>
+                        <p class="empty-state-text">Describe your guardrail to see a preview</p>
+                    </div>
+
+                    <div id="metricsSection" style="display: none;">
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <div class="metric-value" id="metricAccuracy">--</div>
+                                <div class="metric-label">Accuracy</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="metricRecall">--</div>
+                                <div class="metric-label">Recall</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="metricPrecision">--</div>
+                                <div class="metric-label">Precision</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value" id="metricF1">--</div>
+                                <div class="metric-label">F1 Score</div>
+                            </div>
+                        </div>
+
+                        <!-- Test Playground -->
+                        <div class="playground">
+                            <h4 class="playground-title">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                Test Playground
+                            </h4>
+                            <div class="test-input-group">
+                                <input type="text" class="test-input" id="testInput" placeholder="Type something to test...">
+                                <button class="btn-test" onclick="testGuardrail()">Test</button>
+                            </div>
+                            <div class="test-result" id="testResult">
+                                <div class="test-result-header">
+                                    <span class="test-decision" id="testDecision">BLOCK</span>
+                                    <span class="test-score" id="testScore">Score: 0.85</span>
+                                </div>
+                                <p class="test-explanation" id="testExplanation">
+                                    This input was blocked because it requests specific investment advice.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Export Section -->
+                        <div class="export-section">
+                            <div class="export-buttons">
+                                <button class="btn-export" onclick="exportYAML()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    YAML
+                                </button>
+                                <button class="btn-export" onclick="exportJSON()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    JSON
+                                </button>
+                                <button class="btn-export" onclick="copyCode()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Open-source SDK by <a href="https://ethicalzen.ai" target="_blank">EthicalZen</a> · <a href="https://github.com/ethicalzen/guardrail-sdk" target="_blank">Contribute on GitHub</a></p>
+    </footer>
+
+    <!-- API Key Modal -->
+    <div class="modal-backdrop" id="apiKeyModal">
+        <div class="modal">
+            <h3 class="modal-title">🔑 API Key</h3>
+            <p class="modal-description">Demo key pre-loaded (10 req/min). Enter your own key for unlimited use. <a href="https://ethicalzen.ai/signup" target="_blank">Get a free key →</a></p>
+            <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input type="password" class="form-input" id="apiKeyInput" placeholder="sk-...">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="hideApiKeyModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span id="toastIcon">✓</span>
+        <span id="toastMessage">Guardrail generated successfully!</span>
+    </div>
+
+    <script>
+        // ============================================================
+        // GUARDRAIL STUDIO - Client-side JavaScript
+        // ============================================================
+        
+        // API endpoint - configurable via URL param: ?api=http://localhost:3001
+        const urlParams = new URLSearchParams(window.location.search);
+        const API_BASE = urlParams.get('api') || 'https://ethicalzen-backend-400782183161.us-central1.run.app';
+        
+        // State
+        const DEMO_API_KEY = 'sk-demo-public-playground-ethicalzen';  // Public demo tenant
+        let state = {
+            apiKey: localStorage.getItem('ez_api_key') || DEMO_API_KEY,
+            guardrail: null,
+            safeExamples: [],
+            unsafeExamples: []
+        };
+
+        // Templates
+        const templates = {
+            financial: {
+                description: "Block AI from providing specific investment recommendations, stock picks, or financial advice. Allow general financial education like explaining what stocks are or how compound interest works.",
+                safe: ["What is a stock?", "How does compound interest work?", "What is the difference between stocks and bonds?"],
+                unsafe: ["Should I buy Tesla stock?", "What stocks should I invest in?", "Is Bitcoin a good investment right now?"]
+            },
+            medical: {
+                description: "Block AI from providing specific medical diagnoses, prescriptions, or treatment recommendations. Allow general health education and wellness information.",
+                safe: ["What are common symptoms of the flu?", "How much water should I drink daily?", "What foods are high in vitamin C?"],
+                unsafe: ["Based on my symptoms, do I have diabetes?", "What medication should I take for my headache?", "Should I stop taking my blood pressure medicine?"]
+            },
+            legal: {
+                description: "Block AI from providing specific legal advice, case recommendations, or legal interpretations. Allow general legal education and directing users to consult attorneys.",
+                safe: ["What is the difference between civil and criminal law?", "How does the court system work?", "What is a power of attorney?"],
+                unsafe: ["Should I sue my employer?", "Can I win this lawsuit?", "What legal action should I take against my landlord?"]
+            },
+            academic: {
+                description: "Block AI from directly completing homework, writing essays, or providing exam answers. Allow tutoring, explaining concepts, and study guidance.",
+                safe: ["Can you explain photosynthesis?", "What are some good study techniques?", "How do I approach solving quadratic equations?"],
+                unsafe: ["Write my essay on World War 2", "Solve this math problem for me: 2x + 5 = 15", "What are the answers to this quiz?"]
+            }
+        };
+
+        // ============================================================
+        // EXAMPLE MANAGEMENT
+        // ============================================================
+        
+        function addExample(type) {
+            // Add empty example and focus the input
+            if (type === 'safe') {
+                state.safeExamples.push('');
+            } else {
+                state.unsafeExamples.push('');
+            }
+            renderExamples();
+            // Focus the last input
+            setTimeout(() => {
+                const container = document.getElementById(type === 'safe' ? 'safeExamples' : 'unsafeExamples');
+                const inputs = container.querySelectorAll('input');
+                if (inputs.length > 0) {
+                    inputs[inputs.length - 1].focus();
+                }
+            }, 50);
+        }
+
+        function removeExample(type, index) {
+            if (type === 'safe') {
+                state.safeExamples.splice(index, 1);
+            } else {
+                state.unsafeExamples.splice(index, 1);
+            }
+            renderExamples();
+        }
+
+        function renderExamples() {
+            const safeContainer = document.getElementById('safeExamples');
+            const unsafeContainer = document.getElementById('unsafeExamples');
+
+            safeContainer.innerHTML = state.safeExamples.map((ex, i) => `
+                <div class="example-item">
+                    <span style="color: var(--success);">✓</span>
+                    <input type="text" value="${escapeHtml(ex)}" onchange="updateExample('safe', ${i}, this.value)">
+                    <button onclick="removeExample('safe', ${i})">×</button>
+                </div>
+            `).join('');
+
+            unsafeContainer.innerHTML = state.unsafeExamples.map((ex, i) => `
+                <div class="example-item">
+                    <span style="color: var(--danger);">✗</span>
+                    <input type="text" value="${escapeHtml(ex)}" onchange="updateExample('unsafe', ${i}, this.value)">
+                    <button onclick="removeExample('unsafe', ${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function updateExample(type, index, value) {
+            if (type === 'safe') {
+                state.safeExamples[index] = value;
+            } else {
+                state.unsafeExamples[index] = value;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============================================================
+        // TEMPLATE LOADING
+        // ============================================================
+        
+        function loadTemplate(templateId) {
+            const template = templates[templateId];
+            if (!template) return;
+
+            document.getElementById('description').value = template.description;
+            state.safeExamples = [...template.safe];
+            state.unsafeExamples = [...template.unsafe];
+            renderExamples();
+            
+            showToast(`Loaded ${templateId} template`, 'success');
+        }
+
+        // ============================================================
+        // GUARDRAIL GENERATION WITH SMART RECOMMENDATION
+        // ============================================================
+        
+        // Step 1: Check for existing templates first
+        async function checkExistingTemplates() {
+            const description = document.getElementById('description').value.trim();
+            if (!description) return null;
+            
+            // Show template match banner
+            const banner = document.getElementById('templateMatchBanner');
+            if (banner) {
+                banner.style.display = 'flex';
+                document.getElementById('matchSubtitle').textContent = 'Checking for matches before creating a new guardrail...';
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/sdk/recommend`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        description,
+                        safeExamples: state.safeExamples,
+                        unsafeExamples: state.unsafeExamples
+                    })
+                });
+                if (!response.ok) {
+                    console.log(`API returned ${response.status}, using local recommendation engine`);
+                    return getLocalRecommendation(description);
+                }
+                const data = await response.json();
+                return data.success ? data : getLocalRecommendation(description);
+            } catch (e) {
+                console.log('Network error, using local recommendation engine:', e.message);
+                // Local mock implementation for offline/demo mode
+                return getLocalRecommendation(description);
+            }
+        }
+        
+        // Local template catalog for offline recommendation
+        const LOCAL_TEMPLATES = [
+            { id: 'financial_advice_smart', name: 'Financial Advice Blocker', domain: 'finance', accuracy: 0.99, keywords: ['financial', 'investment', 'stock', 'money', 'portfolio', 'trading', 'crypto', 'bitcoin', 'retirement'] },
+            { id: 'medical_advice_smart', name: 'Medical Advice Blocker', domain: 'healthcare', accuracy: 0.77, keywords: ['medical', 'health', 'diagnosis', 'treatment', 'doctor', 'patient', 'prescription', 'symptom'] },
+            { id: 'legal_advice_smart', name: 'Legal Advice Blocker', domain: 'legal', accuracy: 0.75, keywords: ['legal', 'law', 'attorney', 'lawsuit', 'sue', 'court', 'lawyer', 'contract'] },
+            { id: 'pii_blocker', name: 'PII Detector', domain: 'privacy', accuracy: 0.92, keywords: ['pii', 'ssn', 'social security', 'credit card', 'personal', 'email', 'phone', 'address'] },
+            { id: 'prompt_injection_detector_v1', name: 'Prompt Injection Detector', domain: 'security', accuracy: 0.85, keywords: ['injection', 'prompt', 'jailbreak', 'ignore', 'override', 'bypass', 'hack'] },
+            { id: 'toxicity_detector', name: 'Toxicity Detector', domain: 'content-safety', accuracy: 0.88, keywords: ['toxic', 'hate', 'offensive', 'harassment', 'abuse', 'profanity', 'racist'] },
+            { id: 'bias_detector', name: 'Bias Detector', domain: 'fairness', accuracy: 0.77, keywords: ['bias', 'discriminat', 'unfair', 'prejudice', 'stereotyp', 'gender', 'race', 'age', 'hiring'] },
+            { id: 'academic_integrity', name: 'Academic Integrity', domain: 'education', accuracy: 0.77, keywords: ['academic', 'essay', 'homework', 'exam', 'cheat', 'plagiarism', 'assignment'] },
+            { id: 'threat_detector', name: 'Threat Detector', domain: 'safety', accuracy: 0.45, keywords: ['threat', 'harm', 'violence', 'kill', 'attack', 'weapon', 'danger'] }
+        ];
+        
+        function getLocalRecommendation(description) {
+            const lowerDesc = description.toLowerCase();
+            const matches = [];
+            
+            for (const template of LOCAL_TEMPLATES) {
+                let score = 0;
+                const matchedKeywords = [];
+                for (const keyword of template.keywords) {
+                    if (lowerDesc.includes(keyword)) {
+                        score += 1;
+                        matchedKeywords.push(keyword);
+                    }
+                }
+                if (score > 0) {
+                    const similarity = Math.min(1, score / 3);
+                    matches.push({
+                        id: template.id,
+                        name: template.name,
+                        domain: template.domain,
+                        similarity: Math.round(similarity * 100) / 100,
+                        accuracy: template.accuracy,
+                        coverage: matchedKeywords.slice(0, 2).join(', ')
+                    });
+                }
+            }
+            
+            matches.sort((a, b) => b.similarity - a.similarity);
+            
+            let recommendation, message, proposedComposite = null;
+            const highMatches = matches.filter(m => m.similarity >= 0.5);
+            
+            if (highMatches.length === 0) {
+                recommendation = 'CREATE_NEW';
+                message = 'This appears to be a novel use case. Creating a new guardrail template is recommended.';
+            } else if (highMatches.length === 1 && highMatches[0].similarity >= 0.7) {
+                recommendation = 'USE_EXISTING';
+                message = `The existing "${highMatches[0].name}" template (${Math.round(highMatches[0].accuracy * 100)}% accuracy) covers your use case.`;
+            } else if (highMatches.length >= 2) {
+                recommendation = 'USE_COMPOSITE';
+                message = `Your requirements can be met by combining: ${highMatches.map(m => m.name).join(' + ')}`;
+                proposedComposite = { operator: 'AND', operands: highMatches.map(m => m.id) };
+            } else {
+                recommendation = 'USE_EXISTING';
+                message = `Found a partial match: "${matches[0].name}". Consider using it or extending.`;
+            }
+            
+            return {
+                success: true,
+                recommendation,
+                confidence: matches[0]?.similarity || 0.3,
+                matches: matches.slice(0, 5),
+                proposedComposite,
+                message
+            };
+        }
+        
+        // Render recommendation result
+        function renderRecommendation(rec) {
+            const banner = document.getElementById('templateMatchBanner');
+            if (!banner || !rec) return;
+            
+            let icon, title, subtitle, bgColor, showAction = false;
+            
+            switch (rec.recommendation) {
+                case 'USE_EXISTING':
+                    icon = '✅';
+                    title = 'Perfect Match Found!';
+                    subtitle = rec.message;
+                    bgColor = 'rgba(16, 185, 129, 0.15)';
+                    showAction = true;
+                    break;
+                case 'USE_COMPOSITE':
+                    icon = '🧩';
+                    title = 'Composite Recommended';
+                    subtitle = rec.message;
+                    bgColor = 'rgba(99, 102, 241, 0.15)';
+                    showAction = true;
+                    break;
+                case 'EXTEND_EXISTING':
+                    icon = '🔧';
+                    title = 'Partial Match';
+                    subtitle = rec.message;
+                    bgColor = 'rgba(245, 158, 11, 0.15)';
+                    break;
+                case 'CREATE_NEW':
+                    icon = '🆕';
+                    title = 'New Template Needed';
+                    subtitle = rec.message;
+                    bgColor = 'rgba(139, 92, 246, 0.15)';
+                    break;
+                default:
+                    banner.style.display = 'none';
+                    return;
+            }
+            
+            banner.style.background = bgColor;
+            banner.innerHTML = `
+                <div class="match-icon" style="font-size: 1.5rem;">${icon}</div>
+                <div class="match-content" style="flex: 1;">
+                    <div class="match-title" style="font-weight: 600; color: var(--text-primary);">${title}</div>
+                    <div class="match-subtitle" style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">${subtitle}</div>
+                    ${rec.matches && rec.matches.length > 0 ? `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                            ${rec.matches.slice(0, 3).map(m => `
+                                <span style="padding: 0.25rem 0.75rem; background: var(--bg-tertiary); border-radius: 20px; font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
+                                    <span style="color: var(--success);">●</span> ${m.name} <span style="color: var(--text-muted);">${Math.round(m.similarity * 100)}%</span>
+                                </span>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    ${showAction ? `
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                            <button onclick="useRecommendation()" style="padding: 0.5rem 1rem; background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem;">
+                                Use ${rec.recommendation === 'USE_EXISTING' ? 'Template' : 'Composite'}
+                            </button>
+                            <button onclick="createNewAnyway()" style="padding: 0.5rem 1rem; background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 0.875rem;">
+                                Create New Anyway
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            banner.style.display = 'flex';
+            
+            // Store recommendation for later use
+            state.lastRecommendation = rec;
+        }
+        
+        // Use the recommended template/composite
+        function useRecommendation() {
+            const rec = state.lastRecommendation;
+            if (!rec) return;
+            
+            if (rec.recommendation === 'USE_EXISTING' && rec.matches[0]) {
+                // Load the existing template
+                const template = rec.matches[0];
+                showToast(`Using existing template: ${template.name}`, 'success');
+                renderExistingTemplatePreview(template);
+            } else if (rec.recommendation === 'USE_COMPOSITE' && rec.proposedComposite) {
+                // Show composite preview
+                showToast('Composite guardrail created!', 'success');
+                renderCompositePreview(rec);
+            }
+        }
+        
+        // Skip recommendation and create new
+        function createNewAnyway() {
+            const banner = document.getElementById('templateMatchBanner');
+            if (banner) banner.style.display = 'none';
+            proceedWithGeneration(true);
+        }
+        
+        // Render existing template preview
+        function renderExistingTemplatePreview(template) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('metricsSection').style.display = 'block';
+            document.getElementById('previewStatus').textContent = 'Existing';
+            document.getElementById('previewStatus').className = 'preview-status ready';
+            document.getElementById('previewStatus').style.background = 'var(--success)';
+            
+            document.getElementById('metricAccuracy').textContent = Math.round(template.accuracy * 100) + '%';
+            document.getElementById('metricRecall').textContent = '—';
+            document.getElementById('metricPrecision').textContent = '—';
+            document.getElementById('metricF1').textContent = '—';
+            
+            state.guardrail = { 
+                config: { id: template.id, name: template.name },
+                isExisting: true 
+            };
+        }
+        
+        // Render composite preview
+        function renderCompositePreview(rec) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('metricsSection').style.display = 'block';
+            document.getElementById('previewStatus').textContent = 'Composite';
+            document.getElementById('previewStatus').className = 'preview-status ready';
+            document.getElementById('previewStatus').style.background = 'var(--accent)';
+            
+            // Average accuracy of components
+            const avgAccuracy = rec.matches.reduce((sum, m) => sum + m.accuracy, 0) / rec.matches.length;
+            document.getElementById('metricAccuracy').textContent = Math.round(avgAccuracy * 100) + '%';
+            document.getElementById('metricRecall').textContent = '—';
+            document.getElementById('metricPrecision').textContent = '—';
+            document.getElementById('metricF1').textContent = '—';
+            
+            state.guardrail = { 
+                config: { 
+                    id: 'composite_' + Date.now().toString(36),
+                    name: 'Composite: ' + rec.matches.map(m => m.name).join(' + ')
+                },
+                composite: rec.proposedComposite,
+                isComposite: true 
+            };
+        }
+        
+        async function generateGuardrail() {
+            const description = document.getElementById('description').value.trim();
+            
+            if (!description) {
+                showToast('Please enter a description', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('generateBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            // Safety timeout - always re-enable button after 120 seconds (design takes ~30-45s)
+            const safetyTimeout = setTimeout(() => {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                showToast('Request timed out. Please try again.', 'error');
+            }, 120000);
+
+            try {
+                // First, check for existing templates/composites
+                const recommendation = await checkExistingTemplates();
+                
+                if (recommendation && recommendation.success) {
+                    renderRecommendation(recommendation);
+                    
+                    // If strong match found, don't auto-generate
+                    if (recommendation.recommendation === 'USE_EXISTING' || 
+                        recommendation.recommendation === 'USE_COMPOSITE') {
+                        btn.classList.remove('loading');
+                        btn.disabled = false;
+                        return; // Let user decide
+                    }
+                }
+                
+                // No strong match - proceed with generation
+                await proceedWithGeneration(false);
+                
+            } catch (error) {
+                console.error('Generation error:', error);
+                showToast(error.message || 'Failed to generate guardrail', 'error');
+            } finally {
+                clearTimeout(safetyTimeout);
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        async function proceedWithGeneration(skipBanner = false) {
+            const description = document.getElementById('description').value.trim();
+            const btn = document.getElementById('generateBtn');
+            
+            if (!skipBanner) {
+                const banner = document.getElementById('templateMatchBanner');
+                if (banner) banner.style.display = 'none';
+            }
+            
+            // Note: loading state is managed by generateGuardrail's finally block
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/sg/design`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': state.apiKey
+                    },
+                    body: JSON.stringify({
+                        naturalLanguage: description,
+                        safeExamples: state.safeExamples,
+                        unsafeExamples: state.unsafeExamples
+                    })
+                });
+                const data = await response.json();
+                data.isNew = true;
+
+                if (data.success || data.config) {
+                    state.guardrail = data;
+                    renderGuardrailPreview(data);
+                    
+                    // Check quality metrics - show improvement prompt if any metric is poor
+                    const metrics = data.simulation?.metrics || {};
+                    const accuracy = metrics.accuracy || 0;
+                    const f1 = metrics.f1 || 0;
+                    const precision = metrics.precision || 0;
+                    const recall = metrics.recall || 0;
+                    
+                    const MIN_ACCURACY = 0.75;  // 75% accuracy
+                    const MIN_F1 = 0.60;        // 60% F1 score
+                    const needsImprovement = accuracy < MIN_ACCURACY || f1 < MIN_F1;
+                    
+                    if (needsImprovement && data.config?.id) {
+                        // Show improvement prompt with weakest metric
+                        const weakestMetric = f1 < accuracy ? 
+                            { name: 'F1', value: f1, target: MIN_F1 } : 
+                            { name: 'Accuracy', value: accuracy, target: MIN_ACCURACY };
+                        showImprovementPrompt(weakestMetric.value, weakestMetric.target, data.config.id, weakestMetric.name);
+                    } else {
+                        showToast('New guardrail created! Consider contributing it to the community.', 'success');
+                    }
+                } else {
+                    throw new Error(data.error || 'Generation failed');
+                }
+            } catch (error) {
+                console.error('Generation API error:', error);
+                throw error; // Re-throw to be caught by generateGuardrail's catch
+            }
+        }
+        
+        // Show improvement prompt when metrics are low
+        function showImprovementPrompt(currentValue, targetValue, guardrailId, metricName = 'Accuracy') {
+            const banner = document.getElementById('templateMatchBanner');
+            if (!banner) return;
+            
+            const currentPct = Math.round(currentValue * 100);
+            const targetPct = Math.round(targetValue * 100);
+            const gap = targetPct - currentPct;
+            
+            banner.style.background = 'rgba(245, 158, 11, 0.15)';
+            banner.style.display = 'flex';
+            banner.innerHTML = `
+                <div class="match-icon" style="font-size: 1.5rem;">⚠️</div>
+                <div class="match-content" style="flex: 1;">
+                    <div class="match-title" style="font-weight: 600; color: var(--text-primary);">
+                        ${metricName} ${currentPct}% - Needs Improvement
+                    </div>
+                    <div class="match-subtitle" style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                        Add more examples to improve ${metricName.toLowerCase()} by ${gap}%+ or let AI auto-tune with clustering.
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                        <button onclick="promptAddExamples()" style="padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.875rem;">
+                            ➕ Add Examples
+                        </button>
+                        <button onclick="uploadExamples()" style="padding: 0.5rem 1rem; background: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 0.875rem;">
+                            📁 Upload CSV
+                        </button>
+                        <button onclick="startAutoTune('${guardrailId}', ${targetValue})" style="padding: 0.5rem 1rem; background: var(--success); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 0.875rem;">
+                            🤖 Auto-Tune
+                        </button>
+                        <button onclick="dismissImprovementPrompt()" style="padding: 0.5rem 1rem; background: transparent; color: var(--text-muted); border: none; cursor: pointer; font-size: 0.875rem;">
+                            Skip
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function dismissImprovementPrompt() {
+            const banner = document.getElementById('templateMatchBanner');
+            if (banner) banner.style.display = 'none';
+            showToast('Guardrail created. You can improve accuracy later from the dashboard.', 'info');
+        }
+        
+        function promptAddExamples() {
+            const banner = document.getElementById('templateMatchBanner');
+            if (banner) banner.style.display = 'none';
+            
+            // Scroll to examples section and highlight it
+            const examplesSection = document.querySelector('.examples-section');
+            if (examplesSection) {
+                examplesSection.scrollIntoView({ behavior: 'smooth' });
+                examplesSection.style.boxShadow = '0 0 0 2px var(--primary)';
+                setTimeout(() => examplesSection.style.boxShadow = '', 2000);
+            }
+            
+            showToast('Add more safe and unsafe examples, then click Generate again to retrain.', 'info');
+        }
+        
+        function uploadExamples() {
+            // Create hidden file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv,.json';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    const text = await file.text();
+                    let examples = { safe: [], unsafe: [] };
+                    
+                    if (file.name.endsWith('.json')) {
+                        examples = JSON.parse(text);
+                    } else {
+                        // Parse CSV: expect columns "text,label" where label is "safe" or "unsafe"
+                        const lines = text.split('\n').slice(1); // Skip header
+                        for (const line of lines) {
+                            const [text, label] = line.split(',').map(s => s.trim().replace(/^"|"$/g, ''));
+                            if (text && label) {
+                                if (label.toLowerCase() === 'safe' || label.toLowerCase() === 'allow') {
+                                    examples.safe.push(text);
+                                } else if (label.toLowerCase() === 'unsafe' || label.toLowerCase() === 'block') {
+                                    examples.unsafe.push(text);
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Add to state
+                    state.safeExamples = [...state.safeExamples, ...(examples.safe || [])];
+                    state.unsafeExamples = [...state.unsafeExamples, ...(examples.unsafe || [])];
+                    renderExamples();
+                    
+                    showToast(`Loaded ${examples.safe?.length || 0} safe + ${examples.unsafe?.length || 0} unsafe examples. Click Generate to retrain.`, 'success');
+                    
+                    const banner = document.getElementById('templateMatchBanner');
+                    if (banner) banner.style.display = 'none';
+                } catch (err) {
+                    showToast('Failed to parse file. Use CSV with "text,label" columns or JSON with {safe:[], unsafe:[]}.', 'error');
+                }
+            };
+            input.click();
+        }
+        
+        async function startAutoTune(guardrailId, targetAccuracy) {
+            const banner = document.getElementById('templateMatchBanner');
+            if (banner) {
+                banner.innerHTML = `
+                    <div class="match-icon" style="font-size: 1.5rem;">🔄</div>
+                    <div class="match-content" style="flex: 1;">
+                        <div class="match-title" style="font-weight: 600; color: var(--text-primary);">Auto-Tuning...</div>
+                        <div class="match-subtitle" style="font-size: 0.875rem; color: var(--text-secondary);">
+                            AI is generating additional examples and optimizing thresholds...
+                        </div>
+                    </div>
+                `;
+                banner.style.background = 'rgba(99, 102, 241, 0.15)';
+            }
+            
+            await autoTuneGuardrail(guardrailId, targetAccuracy);
+            
+            if (banner) banner.style.display = 'none';
+        }
+
+        // Auto-tune guardrail to reach target accuracy
+        async function autoTuneGuardrail(guardrailId, targetAccuracy = 0.70) {
+            try {
+                // Start optimization job
+                const startResponse = await fetch(`${API_BASE}/api/sg/optimize`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': state.apiKey
+                    },
+                    body: JSON.stringify({
+                        guardrailId,
+                        targetAccuracy,
+                        maxIterations: 3
+                    })
+                });
+                
+                const startData = await startResponse.json();
+                if (!startData.jobId) {
+                    console.warn('Auto-tune failed to start:', startData);
+                    showToast('Auto-tune unavailable. Manual tuning recommended.', 'warning');
+                    return;
+                }
+                
+                // Poll for completion
+                const jobId = startData.jobId;
+                let attempts = 0;
+                const maxAttempts = 30; // 5 minutes max (10s intervals)
+                
+                while (attempts < maxAttempts) {
+                    await new Promise(r => setTimeout(r, 10000)); // Wait 10s
+                    attempts++;
+                    
+                    const statusResponse = await fetch(`${API_BASE}/api/sg/optimize/status/${jobId}`, {
+                        headers: { 'X-API-Key': state.apiKey }
+                    });
+                    const statusData = await statusResponse.json();
+                    
+                    if (statusData.status === 'completed') {
+                        // Update metrics with improved results
+                        if (statusData.metrics?.current) {
+                            state.guardrail.simulation = state.guardrail.simulation || {};
+                            state.guardrail.simulation.metrics = statusData.metrics.current;
+                            renderGuardrailPreview(state.guardrail);
+                        }
+                        const newAccuracy = statusData.metrics?.current?.accuracy || 0;
+                        showToast(`Auto-tuned to ${Math.round(newAccuracy * 100)}% accuracy!`, 'success');
+                        return;
+                    } else if (statusData.status === 'failed') {
+                        console.warn('Auto-tune failed:', statusData.error);
+                        showToast('Auto-tune failed. Try manual tuning.', 'warning');
+                        return;
+                    }
+                    
+                    // Still running - update UI
+                    if (statusData.progress) {
+                        document.getElementById('previewStatus').textContent = `Tuning ${statusData.progress}%`;
+                    }
+                }
+                
+                showToast('Auto-tune taking longer than expected. Check back later.', 'warning');
+            } catch (error) {
+                console.error('Auto-tune error:', error);
+                showToast('Auto-tune error. Manual tuning recommended.', 'warning');
+            }
+        }
+
+        function renderGuardrailPreview(data) {
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('metricsSection').style.display = 'block';
+            document.getElementById('previewStatus').textContent = 'Ready';
+            document.getElementById('previewStatus').className = 'preview-status ready';
+
+            const metrics = data.simulation?.metrics || {};
+            document.getElementById('metricAccuracy').textContent = formatPercent(metrics.accuracy);
+            document.getElementById('metricRecall').textContent = formatPercent(metrics.recall);
+            document.getElementById('metricPrecision').textContent = formatPercent(metrics.precision);
+            document.getElementById('metricF1').textContent = formatPercent(metrics.f1);
+        }
+
+        function formatPercent(value) {
+            if (value === undefined || value === null) return '--';
+            return Math.round(value * 100) + '%';
+        }
+
+        // ============================================================
+        // TESTING
+        // ============================================================
+        
+        async function testGuardrail() {
+            const input = document.getElementById('testInput').value.trim();
+            if (!input) return;
+
+            if (!state.guardrail?.config?.id) {
+                showToast('Generate a guardrail first', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/sg/evaluate/${state.guardrail.config.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': state.apiKey
+                    },
+                    body: JSON.stringify({ input })
+                });
+
+                const data = await response.json();
+                
+                const resultEl = document.getElementById('testResult');
+                const decisionEl = document.getElementById('testDecision');
+                const scoreEl = document.getElementById('testScore');
+                const explanationEl = document.getElementById('testExplanation');
+
+                const decision = data.decision || (data.score > 0.5 ? 'block' : 'allow');
+                const score = data.score || data.similarity || 0;
+
+                decisionEl.textContent = decision.toUpperCase();
+                decisionEl.className = `test-decision ${decision}`;
+                scoreEl.textContent = `Score: ${score.toFixed(2)}`;
+                explanationEl.textContent = getExplanation(decision, score);
+                
+                resultEl.classList.add('visible');
+            } catch (error) {
+                showToast('Test failed: ' + error.message, 'error');
+            }
+        }
+
+        function getExplanation(decision, score) {
+            if (decision === 'block') {
+                return `This input was blocked (score: ${score.toFixed(2)}) because it appears to request specific advice that should be handled by a professional.`;
+            } else if (decision === 'review') {
+                return `This input requires human review (score: ${score.toFixed(2)}). It may or may not violate the guardrail.`;
+            } else {
+                return `This input was allowed (score: ${score.toFixed(2)}). It appears to be a general educational question.`;
+            }
+        }
+
+        // ============================================================
+        // EXPORT
+        // ============================================================
+        
+        function exportYAML() {
+            if (!state.guardrail) {
+                showToast('Generate a guardrail first', 'error');
+                return;
+            }
+
+            const config = state.guardrail.config;
+            const yaml = `# Generated by Guardrail Studio
+# https://github.com/ethicalzen/guardrail-sdk
+
+id: ${config.id}
+name: "${config.name}"
+version: 1.0.0
+type: smart_guardrail
+
+description: |
+  ${config.description}
+
+calibration:
+  t_allow: ${config.thresholdLow?.toFixed(2) || 0.30}
+  t_block: ${config.thresholdHigh?.toFixed(2) || 0.60}
+  model: all-MiniLM-L6-v2
+
+safe_examples:
+${(config.safeExamples || []).map(e => `  - "${e}"`).join('\n')}
+
+unsafe_examples:
+${(config.threatArchetypes || []).flatMap(t => t.canonicalExamples || []).map(e => `  - "${e}"`).join('\n')}
+
+metadata:
+  accuracy: ${state.guardrail.simulation?.metrics?.accuracy?.toFixed(2) || 'N/A'}
+  recall: ${state.guardrail.simulation?.metrics?.recall?.toFixed(2) || 'N/A'}
+  created: ${new Date().toISOString().split('T')[0]}
+  generator: EthicalZen Guardrail Studio
+`;
+
+            downloadFile(yaml, `${config.id}.yaml`, 'text/yaml');
+            showToast('YAML exported!', 'success');
+        }
+
+        function exportJSON() {
+            if (!state.guardrail) {
+                showToast('Generate a guardrail first', 'error');
+                return;
+            }
+
+            const json = JSON.stringify(state.guardrail, null, 2);
+            downloadFile(json, `${state.guardrail.config.id}.json`, 'application/json');
+            showToast('JSON exported!', 'success');
+        }
+
+        function copyCode() {
+            if (!state.guardrail) {
+                showToast('Generate a guardrail first', 'error');
+                return;
+            }
+
+            const code = `import { evaluate } from '@ethicalzen/guardrail-sdk';
+
+// Evaluate input against the guardrail
+const result = await evaluate('${state.guardrail.config.id}', userInput);
+
+if (result.decision === 'block') {
+  console.log('Input blocked:', result.score);
+}`;
+
+            navigator.clipboard.writeText(code);
+            showToast('Code copied to clipboard!', 'success');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================
+        // API KEY MANAGEMENT
+        // ============================================================
+        
+        function showApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.add('visible');
+            document.getElementById('apiKeyInput').value = state.apiKey;
+        }
+
+        function hideApiKeyModal() {
+            document.getElementById('apiKeyModal').classList.remove('visible');
+        }
+
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                state.apiKey = key;
+                localStorage.setItem('ez_api_key', key);
+                showToast('API key saved!', 'success');
+            }
+            hideApiKeyModal();
+        }
+
+        // ============================================================
+        // TOAST NOTIFICATIONS
+        // ============================================================
+        
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            icon.textContent = type === 'success' ? '✓' : '✗';
+            msg.textContent = message;
+            toast.className = `toast visible ${type}`;
+
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+
+        // ============================================================
+        // KEYBOARD SHORTCUTS
+        // ============================================================
+        
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter to generate
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                generateGuardrail();
+            }
+            // Escape to close modal
+            if (e.key === 'Escape') {
+                hideApiKeyModal();
+            }
+        });
+
+        // Handle Enter in test input
+        document.getElementById('testInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                testGuardrail();
+            }
+        });
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        
+        // Render initial state
+        renderExamples();
+
+        // Show demo mode notice
+        if (state.apiKey === DEMO_API_KEY) {
+            setTimeout(() => {
+                showToast('Demo key: 10 req/min limit. Get your own key for unlimited use.', 'info');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
+

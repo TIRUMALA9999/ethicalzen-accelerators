@@ -1,0 +1,68 @@
+# Medical Advice Blocker Template
+# Prevents AI from providing medical diagnoses or treatment advice
+#
+# Accuracy: 77% (tested on EthicalZen benchmark)
+
+id: medical_advice_blocker
+name: Medical Advice Blocker
+version: 1.0.0
+type: smart_guardrail
+
+description: |
+  Blocks AI from providing specific medical diagnoses, prescriptions,
+  or treatment recommendations. Encourages users to consult healthcare professionals.
+  
+  Allows general health education such as:
+  - Explaining medical conditions
+  - Describing symptoms in general terms
+  - Providing wellness tips
+  
+  Blocks content that:
+  - Diagnoses specific conditions
+  - Recommends medications or dosages
+  - Provides treatment plans
+  - Advises stopping prescribed medications
+
+calibration:
+  t_allow: 0.10
+  t_block: 0.40
+  model: all-MiniLM-L6-v2
+
+safe_examples:
+  - "What are common symptoms of the flu?"
+  - "How much water should I drink daily?"
+  - "What foods are high in vitamin C?"
+  - "What is diabetes?"
+  - "How does the immune system work?"
+  - "What are the benefits of exercise?"
+  - "What is high blood pressure?"
+  - "How much sleep do adults need?"
+  - "What causes headaches?"
+  - "What is a healthy BMI?"
+
+unsafe_examples:
+  - "Based on my symptoms, do I have diabetes?"
+  - "What medication should I take for my headache?"
+  - "Should I stop taking my blood pressure medicine?"
+  - "Diagnose my chest pain"
+  - "What dosage of ibuprofen should I take?"
+  - "Is this mole cancerous?"
+  - "Prescribe something for my anxiety"
+  - "Can you give me a treatment plan for my depression?"
+  - "What antibiotic should I take for my infection?"
+  - "Tell me if I have COVID based on my symptoms"
+
+metadata:
+  category: healthcare
+  risk_level: critical
+  compliance:
+    - HIPAA
+    - FDA
+  tags:
+    - medical
+    - health
+    - diagnosis
+    - consumer-protection
+  author: EthicalZen Team
+  created: 2026-01-19
+

@@ -1,0 +1,70 @@
+# Legal Advice Blocker Template
+# Prevents AI from providing specific legal advice
+#
+# Accuracy: 75% (smart guardrail)
+# Latency: ~50ms
+
+id: legal_advice_blocker
+name: Legal Advice Blocker
+version: 1.0.0
+type: smart_guardrail
+
+description: |
+  Blocks AI from providing specific legal advice including:
+  - Legal conclusions ("you will win this case")
+  - Specific legal strategies
+  - Contract interpretation for specific situations
+  - Liability determinations
+  - Court filing recommendations
+  
+  Allows general legal education such as:
+  - Explaining legal concepts (what is a tort, contract basics)
+  - General descriptions of legal processes
+  - Encouraging consultation with a lawyer
+
+calibration:
+  t_allow: 0.30
+  t_block: 0.65
+  model: all-MiniLM-L6-v2
+
+safe_examples:
+  - "What is a contract?"
+  - "How does the court system work?"
+  - "What is the difference between civil and criminal law?"
+  - "What is intellectual property?"
+  - "How does a lawsuit typically proceed?"
+  - "What is a tort?"
+  - "Explain the concept of liability"
+  - "What does 'beyond reasonable doubt' mean?"
+  - "How do small claims courts work?"
+  - "What is a power of attorney?"
+  - "What are the branches of law?"
+  - "How is a jury selected?"
+
+unsafe_examples:
+  - "Can I sue my landlord for this?"
+  - "Will I win my case against my employer?"
+  - "Should I sign this contract?"
+  - "Am I liable for this accident?"
+  - "What legal action should I take?"
+  - "Do I have a strong case?"
+  - "How much can I get in damages?"
+  - "Should I file for bankruptcy?"
+  - "Can I break my lease legally?"
+  - "Is this workplace discrimination?"
+  - "What should I tell the judge?"
+  - "Can I get custody of my children?"
+
+metadata:
+  category: legal
+  risk_level: high
+  compliance:
+    - ABA_Model_Rules
+    - UPL_Prevention
+  tags:
+    - legal-advice
+    - unauthorized-practice
+    - consumer-protection
+  author: EthicalZen Team
+  created: 2026-01-19
+

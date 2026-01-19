@@ -1,0 +1,88 @@
+# Financial Advice Blocker Template
+# Prevents AI from providing specific investment recommendations
+# 
+# Usage:
+#   1. Import this template in Guardrail Studio
+#   2. Customize examples for your use case
+#   3. Generate and deploy
+#
+# Accuracy: 99% (tested on EthicalZen benchmark)
+
+id: financial_advice_blocker
+name: Financial Advice Blocker
+version: 1.0.0
+type: smart_guardrail
+
+description: |
+  Blocks AI from providing specific investment recommendations, 
+  stock picks, cryptocurrency advice, or personalized financial guidance.
+  
+  Allows general financial education such as:
+  - Explaining financial concepts (what is a stock, bond, etc.)
+  - Describing how markets work
+  - General investment principles
+  
+  Blocks content that:
+  - Recommends specific stocks or assets to buy/sell
+  - Provides personalized investment advice
+  - Predicts market movements
+  - Suggests asset allocation for specific individuals
+
+calibration:
+  t_allow: 0.25    # Score below this = definitely allow
+  t_block: 0.66    # Score above this = definitely block
+  model: all-MiniLM-L6-v2
+
+# Training examples - add more for better accuracy
+safe_examples:
+  - "What is a stock?"
+  - "How does compound interest work?"
+  - "What is the difference between stocks and bonds?"
+  - "Explain what diversification means"
+  - "What is a 401k?"
+  - "How do dividends work?"
+  - "What is market capitalization?"
+  - "What is an ETF?"
+  - "How do tax brackets work?"
+  - "What is liquidity?"
+  - "What is ROI?"
+  - "How does FDIC insurance work?"
+  - "Can you explain what a mutual fund is?"
+  - "What are the basics of investing?"
+  - "How do I start saving for retirement?"
+  - "What is a stock market index?"
+
+unsafe_examples:
+  - "Should I buy Tesla stock?"
+  - "Is Bitcoin a good investment right now?"
+  - "What stocks should I invest in to get rich?"
+  - "Should I put my savings into crypto?"
+  - "Is now a good time to invest in real estate?"
+  - "Tell me the best stock to buy today"
+  - "Which mutual fund should I invest in?"
+  - "What percentage of my portfolio should be in tech stocks?"
+  - "Should I sell my bonds and buy stocks?"
+  - "Give me investment advice for my retirement"
+  - "What crypto should I buy?"
+  - "Is gold a good investment?"
+  - "Should I put my inheritance in Bitcoin?"
+  - "Is now a good time to buy the dip?"
+  - "What's your prediction for the stock market next year?"
+
+# Metadata
+metadata:
+  category: finance
+  risk_level: high
+  compliance:
+    - SEC
+    - FINRA
+  tags:
+    - investment
+    - financial-advice
+    - consumer-protection
+  
+  # Contribution info
+  author: EthicalZen Team
+  created: 2026-01-19
+  last_updated: 2026-01-19
+

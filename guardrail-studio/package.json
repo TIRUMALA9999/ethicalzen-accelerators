@@ -1,0 +1,46 @@
+{
+  "name": "@ethicalzen/guardrail-studio",
+  "version": "1.0.0",
+  "description": "Design, test, and deploy AI guardrails with natural language",
+  "main": "src/lib/client.js",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8090",
+    "dev": "python3 -m http.server 8090",
+    "test": "echo \"No tests yet\"",
+    "lint": "eslint src/"
+  },
+  "keywords": [
+    "ai-safety",
+    "guardrails",
+    "llm",
+    "compliance",
+    "ethicalzen",
+    "ai-ethics",
+    "prompt-injection",
+    "content-moderation"
+  ],
+  "author": "EthicalZen <hello@ethicalzen.ai>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ethicalzen/guardrail-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/ethicalzen/guardrail-sdk/issues"
+  },
+  "homepage": "https://ethicalzen.ai",
+  "files": [
+    "src/",
+    "templates/",
+    "index.html",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
+
