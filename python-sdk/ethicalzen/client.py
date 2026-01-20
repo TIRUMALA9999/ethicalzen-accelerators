@@ -250,6 +250,7 @@ class EthicalZen:
         self,
         guardrail: str,
         test_cases: Optional[List[Dict[str, Any]]] = None,
+        config: Optional[Dict[str, Any]] = None,
     ) -> SimulationResult:
         """
         Run simulation tests on a guardrail.
@@ -257,13 +258,20 @@ class EthicalZen:
         Args:
             guardrail: Guardrail ID to simulate
             test_cases: Optional custom test cases
+            config: Optional guardrail config (if not saved yet)
             
         Returns:
             SimulationResult with accuracy metrics
         """
+        body: Dict[str, Any] = {"guardrailId": guardrail}
+        if test_cases:
+            body["testCases"] = test_cases
+        if config:
+            body["config"] = config
+            
         response = self._client.post(
-            f"/api/sg/simulate/{guardrail}",
-            json={"testCases": test_cases} if test_cases else {},
+            "/api/sg/simulate",
+            json=body,
         )
         
         data = self._handle_response(response)
@@ -332,38 +340,85 @@ class EthicalZen:
         
         templates = []
         for t in data.get("templates", []):
+            # Backend returns: type, displayName, description, exampleCount, expectedMetrics
             templates.append(Template(
-                id=t.get("id", ""),
-                name=t.get("name", ""),
+                id=t.get("type", ""),  # 'type' is the template ID
+                name=t.get("displayName", ""),  # 'displayName' is the name
                 description=t.get("description", ""),
                 category=t.get("category", "general"),
-                accuracy=t.get("accuracy"),
+                accuracy=t.get("expectedMetrics", {}).get("accuracy"),
             ))
         
         return templates
+    
+    def get_template(self, template_id: str) -> Template:
+        """
+        Get a specific guardrail template with examples.
+        
+        Args:
+            template_id: Template type ID (e.g., "medical_advice", "pii_blocker")
+            
+        Returns:
+            Template object with examples
+        """
+        response = self._client.get(f"/api/sg/templates/{template_id}")
+        data = self._handle_response(response)
+        
+        t = data.get("template", {})
+        return Template(
+            id=data.get("type", template_id),
+            name=t.get("displayName", ""),
+            description=t.get("description", ""),
+            category="general",
+            accuracy=t.get("expectedAccuracy"),
+            safe_examples=t.get("safeExamples", []),
+            unsafe_examples=t.get("unsafeExamples", []),
+        )
+
+    def list_guardrails(self) -> List[GuardrailConfig]:
+        """
+        List all guardrails for the tenant.
+        
+        Returns:
+            List of GuardrailConfig objects
+        """
+        response = self._client.get("/api/sg/list")
+        data = self._handle_response(response)
+        
+        guardrails = []
+        for g in data.get("guardrails", []):
+            guardrails.append(GuardrailConfig(
+                id=g.get("id", ""),
+                name=g.get("name", ""),
+                description=g.get("description", ""),
+                t_allow=g.get("thresholdLow", g.get("t_allow", 0.30)),
+                t_block=g.get("thresholdHigh", g.get("t_block", 0.70)),
+                safe_examples=g.get("safeExamples", g.get("safe_examples", [])),
+                unsafe_examples=g.get("unsafeExamples", g.get("unsafe_examples", [])),
+            ))
+        
+        return guardrails
 
     def get_guardrail(self, guardrail: str) -> GuardrailConfig:
         """
-        Get a guardrail configuration.
+        Get a specific guardrail configuration.
         
         Args:
             guardrail: Guardrail ID
             
         Returns:
             GuardrailConfig object
+            
+        Raises:
+            GuardrailNotFoundError: If guardrail not found
         """
-        response = self._client.get(f"/api/sg/guardrails/{guardrail}")
-        data = self._handle_response(response)
+        # List all and filter by ID (backend doesn't have single-get endpoint)
+        guardrails = self.list_guardrails()
+        for g in guardrails:
+            if g.id == guardrail:
+                return g
         
-        return GuardrailConfig(
-            id=data.get("id", guardrail),
-            name=data.get("name", ""),
-            description=data.get("description", ""),
-            t_allow=data.get("thresholdLow", 0.30),
-            t_block=data.get("thresholdHigh", 0.70),
-            safe_examples=data.get("safeExamples", []),
-            unsafe_examples=data.get("unsafeExamples", []),
-        )
+        raise GuardrailNotFoundError(guardrail)
 
     def close(self) -> None:
         """Close the HTTP client."""

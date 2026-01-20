@@ -83,7 +83,7 @@ class SimulationResult(BaseModel):
     """Result of a guardrail simulation."""
     
     success: bool = Field(description="Whether simulation completed successfully")
-    metrics: SimulationMetrics = Field(description="Simulation metrics")
+    metrics: Dict[str, Any] = Field(description="Simulation metrics")
     test_results: Optional[List[Dict[str, Any]]] = Field(
         default=None, 
         description="Detailed results for each test case"
@@ -119,6 +119,8 @@ class Template(BaseModel):
     id: str = Field(description="Template identifier")
     name: str = Field(description="Template name")
     description: str = Field(description="What this template does")
-    category: str = Field(description="Template category")
+    category: str = Field(default="general", description="Template category")
     accuracy: Optional[float] = Field(default=None, description="Reported accuracy")
+    safe_examples: List[str] = Field(default_factory=list, description="Example inputs that should be allowed")
+    unsafe_examples: List[str] = Field(default_factory=list, description="Example inputs that should be blocked")
 
