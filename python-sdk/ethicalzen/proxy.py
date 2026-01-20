@@ -1,26 +1,38 @@
 """
-EthicalZen Proxy Client - Transparent LLM API protection.
+EthicalZen Proxy Client - Transparent API protection for ANY web service.
 
-This module provides a proxy client that wraps LLM API calls (OpenAI, Anthropic, etc.)
+This module provides a proxy client that wraps ANY HTTP API calls
 and routes them through the EthicalZen gateway for input/output validation.
 
+Works with: LLMs, REST APIs, GraphQL, internal microservices, third-party APIs, etc.
+
 Usage:
-    from ethicalzen.proxy import EthicalZenProxy
+    from ethicalzen import EthicalZenProxy
     
     # Create proxy client
     proxy = EthicalZenProxy(
         api_key="your-ethicalzen-key",
         certificate_id="dc_your_certificate",
-        gateway_url="https://gateway.ethicalzen.ai"  # or your self-hosted gateway
     )
     
-    # Use like normal OpenAI client - requests are automatically protected
-    response = proxy.chat_completions(
-        target_url="https://api.openai.com/v1/chat/completions",
-        target_api_key="sk-openai-key",
-        model="gpt-4",
-        messages=[{"role": "user", "content": "Hello!"}]
+    # POST request to any endpoint
+    response = proxy.post(
+        "https://api.openai.com/v1/chat/completions",
+        json={"model": "gpt-4", "messages": [...]},
+        headers={"Authorization": "Bearer sk-..."}
     )
+    
+    # GET request
+    response = proxy.get(
+        "https://api.example.com/users/123",
+        headers={"Authorization": "Bearer token"}
+    )
+    
+    # Check if blocked
+    if response.blocked:
+        print(f"Request blocked: {response.block_reason}")
+    else:
+        print(response.json())
 """
 
 import os
@@ -39,68 +51,111 @@ DEFAULT_GATEWAY_URL = "https://acvps-gateway-mqnusyobga-uc.a.run.app"
 
 
 class ProxyResponse:
-    """Response from a proxied LLM request."""
+    """
+    Response from a proxied request.
+    
+    Provides access to the response data and block status.
+    """
     
     def __init__(
         self,
-        data: Dict[str, Any],
+        status_code: int,
+        data: Any,
+        headers: Dict[str, str],
         blocked: bool = False,
         block_reason: Optional[str] = None,
         guardrail_id: Optional[str] = None,
         score: Optional[float] = None,
+        raw_response: Optional[httpx.Response] = None,
     ):
-        self.data = data
+        self.status_code = status_code
+        self._data = data
+        self.headers = headers
         self.blocked = blocked
         self.block_reason = block_reason
         self.guardrail_id = guardrail_id
         self.score = score
-        
-        # For OpenAI-compatible responses
-        self.choices = data.get("choices", [])
-        self.usage = data.get("usage", {})
-        self.model = data.get("model", "")
-        self.id = data.get("id", "")
+        self._raw = raw_response
+    
+    def json(self) -> Any:
+        """Get response as JSON (dict or list)."""
+        return self._data
+    
+    @property
+    def data(self) -> Any:
+        """Alias for json() - get response data."""
+        return self._data
+    
+    @property
+    def text(self) -> str:
+        """Get response as text."""
+        if isinstance(self._data, (dict, list)):
+            import json
+            return json.dumps(self._data)
+        return str(self._data)
+    
+    @property
+    def ok(self) -> bool:
+        """Check if response is successful (2xx) and not blocked."""
+        return 200 <= self.status_code < 300 and not self.blocked
+    
+    # OpenAI-compatible convenience properties
+    @property
+    def choices(self) -> List[Dict]:
+        """Get choices from OpenAI-style response."""
+        if isinstance(self._data, dict):
+            return self._data.get("choices", [])
+        return []
     
     @property
     def content(self) -> str:
-        """Get the response content (first choice message)."""
+        """Get content from first choice (OpenAI-style)."""
         if self.blocked:
             return f"[BLOCKED] {self.block_reason}"
         if self.choices:
-            return self.choices[0].get("message", {}).get("content", "")
+            msg = self.choices[0].get("message", {})
+            return msg.get("content", "") if isinstance(msg, dict) else ""
         return ""
     
     def __repr__(self) -> str:
         if self.blocked:
-            return f"<ProxyResponse blocked={self.blocked} reason='{self.block_reason}'>"
-        return f"<ProxyResponse model='{self.model}' content='{self.content[:50]}...'>"
+            return f"<ProxyResponse blocked=True reason='{self.block_reason}'>"
+        return f"<ProxyResponse status={self.status_code} ok={self.ok}>"
 
 
 class EthicalZenProxy:
     """
-    Proxy client that routes LLM API calls through EthicalZen gateway.
+    Proxy client that routes ANY HTTP API calls through EthicalZen gateway.
     
-    The gateway validates both input (user messages) and output (LLM responses)
+    The gateway validates both request (input) and response (output)
     against your configured guardrails/certificates.
+    
+    Works with ANY HTTP endpoint: REST APIs, LLMs, GraphQL, microservices, etc.
     
     Usage:
         proxy = EthicalZenProxy(
             api_key="sk-ethicalzen-key",
-            certificate_id="dc_healthcare_patient_portal"
+            certificate_id="dc_my_app"
         )
         
-        # OpenAI-style request
-        response = proxy.chat_completions(
-            target_url="https://api.openai.com/v1/chat/completions",
-            target_api_key=os.environ["OPENAI_API_KEY"],
-            model="gpt-4",
-            messages=[{"role": "user", "content": "What medication should I take?"}]
+        # POST to any endpoint
+        response = proxy.post(
+            "https://api.openai.com/v1/chat/completions",
+            json={"model": "gpt-4", "messages": [{"role": "user", "content": "Hi"}]},
+            headers={"Authorization": "Bearer sk-openai-key"}
         )
         
+        # GET request
+        response = proxy.get(
+            "https://api.stripe.com/v1/customers/cus_123",
+            headers={"Authorization": "Bearer sk-stripe-key"}
+        )
+        
+        # Check result
         if response.blocked:
-            print(f"Request blocked: {response.block_reason}")
+            print(f"Blocked: {response.block_reason}")
         else:
-            print(response.content)
+            print(response.json())
     """
     
     def __init__(
@@ -141,159 +196,171 @@ class EthicalZenProxy:
         
         self._client = httpx.Client(timeout=timeout)
     
-    def chat_completions(
+    def request(
         self,
-        target_url: str,
-        target_api_key: str,
-        messages: List[Dict[str, str]],
-        model: str = "gpt-4",
+        method: str,
+        url: str,
+        *,
+        json: Optional[Any] = None,
+        data: Optional[Any] = None,
+        headers: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
         **kwargs: Any,
     ) -> ProxyResponse:
         """
-        Send a chat completion request through the EthicalZen gateway.
+        Send an HTTP request through the EthicalZen gateway.
         
         Args:
-            target_url: Target LLM API URL (e.g., "https://api.openai.com/v1/chat/completions")
-            target_api_key: API key for the target LLM
-            messages: Chat messages in OpenAI format
-            model: Model name
-            **kwargs: Additional parameters passed to the LLM API
+            method: HTTP method (GET, POST, PUT, DELETE, PATCH, etc.)
+            url: Target URL (the actual API you want to call)
+            json: JSON body (for POST/PUT/PATCH)
+            data: Form data or raw body
+            headers: Headers to pass to the target API
+            params: Query parameters
+            **kwargs: Additional arguments
             
         Returns:
-            ProxyResponse with LLM response or block information
+            ProxyResponse with response data or block information
         """
-        return self._proxy_request(
-            target_url=target_url,
-            target_api_key=target_api_key,
-            body={
-                "model": model,
-                "messages": messages,
-                **kwargs,
-            },
-        )
-    
-    def completions(
-        self,
-        target_url: str,
-        target_api_key: str,
-        prompt: str,
-        model: str = "gpt-3.5-turbo-instruct",
-        **kwargs: Any,
-    ) -> ProxyResponse:
-        """
-        Send a completion request through the EthicalZen gateway.
-        
-        Args:
-            target_url: Target LLM API URL
-            target_api_key: API key for the target LLM
-            prompt: The prompt text
-            model: Model name
-            **kwargs: Additional parameters
-            
-        Returns:
-            ProxyResponse with LLM response or block information
-        """
-        return self._proxy_request(
-            target_url=target_url,
-            target_api_key=target_api_key,
-            body={
-                "model": model,
-                "prompt": prompt,
-                **kwargs,
-            },
-        )
-    
-    def _proxy_request(
-        self,
-        target_url: str,
-        target_api_key: str,
-        body: Dict[str, Any],
-    ) -> ProxyResponse:
-        """Send a request through the gateway proxy."""
-        headers = {
+        # Build gateway headers
+        gateway_headers = {
             "Content-Type": "application/json",
             "X-API-Key": self.api_key,
-            "X-Target-Endpoint": target_url,
-            "Authorization": f"Bearer {target_api_key}",
+            "X-Target-Endpoint": url,
+            "X-Target-Method": method.upper(),
         }
         
         if self.certificate_id:
-            headers["X-Contract-ID"] = self.certificate_id
+            gateway_headers["X-Contract-ID"] = self.certificate_id
         if self.tenant_id:
-            headers["X-Tenant-ID"] = self.tenant_id
+            gateway_headers["X-Tenant-ID"] = self.tenant_id
+        
+        # Pass through target headers (like Authorization)
+        if headers:
+            for key, value in headers.items():
+                # Pass auth headers directly
+                if key.lower() in ("authorization", "x-api-key", "api-key"):
+                    gateway_headers[key] = value
+                else:
+                    # Prefix other headers to avoid conflicts
+                    gateway_headers[f"X-Target-Header-{key}"] = value
+        
+        # Build request body for gateway
+        gateway_body: Dict[str, Any] = {}
+        if json is not None:
+            gateway_body = json if isinstance(json, dict) else {"_body": json}
+        elif data is not None:
+            gateway_body = {"_raw_data": data}
+        
+        if params:
+            gateway_body["_query_params"] = params
         
         try:
             response = self._client.post(
                 f"{self.gateway_url}/api/proxy",
-                headers=headers,
-                json=body,
+                headers=gateway_headers,
+                json=gateway_body if gateway_body else None,
             )
             
             # Check for blocked response
             if response.status_code == 403:
-                data = response.json()
+                try:
+                    resp_data = response.json()
+                except Exception:
+                    resp_data = {"message": response.text}
+                    
                 return ProxyResponse(
-                    data=data,
+                    status_code=403,
+                    data=resp_data,
+                    headers=dict(response.headers),
                     blocked=True,
-                    block_reason=data.get("reason") or data.get("message") or "Request blocked by guardrail",
-                    guardrail_id=data.get("guardrail_id"),
-                    score=data.get("score"),
+                    block_reason=resp_data.get("reason") or resp_data.get("message") or "Request blocked by guardrail",
+                    guardrail_id=resp_data.get("guardrail_id"),
+                    score=resp_data.get("score"),
+                    raw_response=response,
                 )
             
-            # Check for other errors
-            if response.status_code >= 400:
-                data = response.json() if response.text else {}
-                
-                if response.status_code == 401:
-                    raise AuthenticationError("Invalid API key")
-                
-                raise APIError(
-                    data.get("error") or data.get("message") or f"Gateway error: {response.status_code}",
-                    status_code=response.status_code,
-                )
+            # Check for auth errors
+            if response.status_code == 401:
+                raise AuthenticationError("Invalid API key")
             
-            # Success
-            data = response.json()
+            # Parse response
+            try:
+                resp_data = response.json()
+            except Exception:
+                resp_data = response.text
             
             # Check if response was blocked (output validation)
-            if data.get("blocked"):
+            if isinstance(resp_data, dict) and resp_data.get("blocked"):
                 return ProxyResponse(
-                    data=data,
+                    status_code=response.status_code,
+                    data=resp_data,
+                    headers=dict(response.headers),
                     blocked=True,
-                    block_reason=data.get("reason") or "Output blocked by guardrail",
-                    guardrail_id=data.get("guardrail_id"),
-                    score=data.get("score"),
+                    block_reason=resp_data.get("reason") or "Output blocked by guardrail",
+                    guardrail_id=resp_data.get("guardrail_id"),
+                    score=resp_data.get("score"),
+                    raw_response=response,
                 )
             
-            return ProxyResponse(data=data, blocked=False)
+            return ProxyResponse(
+                status_code=response.status_code,
+                data=resp_data,
+                headers=dict(response.headers),
+                blocked=False,
+                raw_response=response,
+            )
             
         except httpx.TimeoutException:
             if self.fail_open:
-                # Fail-open: make direct request (no protection)
-                direct_response = self._client.post(
-                    target_url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {target_api_key}",
-                    },
-                    json=body,
-                )
-                return ProxyResponse(data=direct_response.json(), blocked=False)
+                return self._direct_request(method, url, json=json, data=data, headers=headers, params=params)
             raise EthicalZenError("Gateway request timed out", status_code=408)
             
         except httpx.RequestError as e:
             if self.fail_open:
-                # Fail-open: make direct request
-                direct_response = self._client.post(
-                    target_url,
-                    headers={
-                        "Content-Type": "application/json",
-                        "Authorization": f"Bearer {target_api_key}",
-                    },
-                    json=body,
-                )
-                return ProxyResponse(data=direct_response.json(), blocked=False)
+                return self._direct_request(method, url, json=json, data=data, headers=headers, params=params)
             raise EthicalZenError(f"Gateway connection error: {e}")
+    
+    def _direct_request(
+        self,
+        method: str,
+        url: str,
+        **kwargs: Any,
+    ) -> ProxyResponse:
+        """Make a direct request (bypass gateway) for fail-open mode."""
+        response = self._client.request(method, url, **kwargs)
+        try:
+            data = response.json()
+        except Exception:
+            data = response.text
+        return ProxyResponse(
+            status_code=response.status_code,
+            data=data,
+            headers=dict(response.headers),
+            blocked=False,
+            raw_response=response,
+        )
+    
+    # Convenience methods for common HTTP methods
+    def get(self, url: str, **kwargs: Any) -> ProxyResponse:
+        """Send a GET request through the gateway."""
+        return self.request("GET", url, **kwargs)
+    
+    def post(self, url: str, **kwargs: Any) -> ProxyResponse:
+        """Send a POST request through the gateway."""
+        return self.request("POST", url, **kwargs)
+    
+    def put(self, url: str, **kwargs: Any) -> ProxyResponse:
+        """Send a PUT request through the gateway."""
+        return self.request("PUT", url, **kwargs)
+    
+    def patch(self, url: str, **kwargs: Any) -> ProxyResponse:
+        """Send a PATCH request through the gateway."""
+        return self.request("PATCH", url, **kwargs)
+    
+    def delete(self, url: str, **kwargs: Any) -> ProxyResponse:
+        """Send a DELETE request through the gateway."""
+        return self.request("DELETE", url, **kwargs)
     
     def close(self) -> None:
         """Close the HTTP client."""
@@ -318,17 +385,17 @@ def wrap_openai(
     
     Usage:
         from openai import OpenAI
-        from ethicalzen.proxy import wrap_openai
+        from ethicalzen import wrap_openai
         
         client = OpenAI()
-        protected_client = wrap_openai(
+        protected = wrap_openai(
             client,
             api_key="sk-ethicalzen-key",
             certificate_id="dc_my_app"
         )
         
         # Use like normal - requests are automatically protected
-        response = protected_client.chat.completions.create(
+        response = protected.chat.completions.create(
             model="gpt-4",
             messages=[{"role": "user", "content": "Hello!"}]
         )
@@ -342,9 +409,7 @@ def wrap_openai(
 
 
 class WrappedOpenAI:
-    """
-    Wrapped OpenAI client that routes requests through EthicalZen gateway.
-    """
+    """Wrapped OpenAI client that routes requests through EthicalZen gateway."""
     
     def __init__(
         self,
@@ -383,14 +448,12 @@ class WrappedCompletions:
     
     def create(self, **kwargs: Any) -> ProxyResponse:
         """Create a chat completion through EthicalZen gateway."""
-        # Extract OpenAI API key from client
         openai_api_key = getattr(self._openai, "api_key", None) or os.environ.get("OPENAI_API_KEY")
         if not openai_api_key:
             raise AuthenticationError("OpenAI API key not found")
         
-        return self._proxy.chat_completions(
-            target_url="https://api.openai.com/v1/chat/completions",
-            target_api_key=openai_api_key,
-            **kwargs,
+        return self._proxy.post(
+            "https://api.openai.com/v1/chat/completions",
+            json=kwargs,
+            headers={"Authorization": f"Bearer {openai_api_key}"},
         )
-

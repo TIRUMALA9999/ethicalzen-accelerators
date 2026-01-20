@@ -61,32 +61,43 @@ print(f"Score: {result.score:.2f}")    # 0.85
 print(f"Reason: {result.reason}")      # "Medical diagnosis/prescription request"
 ```
 
-### Proxy Mode (Recommended for LLM Apps)
+### Proxy Mode (Recommended)
 
-The proxy mode transparently routes your LLM API calls through EthicalZen's gateway, 
-protecting both input and output automatically:
+The proxy mode transparently routes **ANY HTTP API calls** through EthicalZen's gateway, 
+protecting both request and response automatically. Works with LLMs, REST APIs, GraphQL, 
+microservices, third-party APIs, and more.
 
 ```python
 from ethicalzen import EthicalZenProxy
 
-# Create proxy client
 proxy = EthicalZenProxy(
     api_key="your-ethicalzen-key",
-    certificate_id="dc_your_certificate",  # Your deployment certificate
+    certificate_id="dc_your_certificate",
 )
 
-# Use like normal OpenAI - requests are automatically protected
-response = proxy.chat_completions(
-    target_url="https://api.openai.com/v1/chat/completions",
-    target_api_key="sk-your-openai-key",
-    model="gpt-4",
-    messages=[{"role": "user", "content": "What medication should I take?"}]
+# POST to any endpoint (e.g., OpenAI)
+response = proxy.post(
+    "https://api.openai.com/v1/chat/completions",
+    json={"model": "gpt-4", "messages": [{"role": "user", "content": "Hello"}]},
+    headers={"Authorization": "Bearer sk-openai-key"}
 )
 
+# GET request (e.g., Stripe API)
+response = proxy.get(
+    "https://api.stripe.com/v1/customers/cus_123",
+    headers={"Authorization": "Bearer sk-stripe-key"}
+)
+
+# PUT, PATCH, DELETE also available
+response = proxy.put("https://api.example.com/resource/123", json={...})
+response = proxy.patch("https://api.example.com/resource/123", json={...})
+response = proxy.delete("https://api.example.com/resource/123")
+
+# Check result
 if response.blocked:
     print(f"Blocked: {response.block_reason}")
 else:
-    print(response.content)
+    print(response.json())
 ```
 
 ### Wrap Existing OpenAI Client
