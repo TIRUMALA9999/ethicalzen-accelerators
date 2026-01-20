@@ -289,11 +289,6 @@ const stream = await client.evaluateStream({
 │   │    Algorithm    │    │     Engine      │    │  (Low Latency)  │    │
 │   └─────────────────┘    └─────────────────┘    └─────────────────┘    │
 │                                                                         │
-│   • Embedding computation (MiniLM-L6-v2)                               │
-│   • Semantic centroid calculation                                       │
-│   • 3-zone decision logic (ALLOW / REVIEW / BLOCK)                     │
-│   • Lexical pattern fusion                                             │
-│                                                                         │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
