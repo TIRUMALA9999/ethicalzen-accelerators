@@ -26,6 +26,7 @@ from ethicalzen.exceptions import (
 
 DEFAULT_BASE_URL = "https://ethicalzen-backend-400782183161.us-central1.run.app"
 DEFAULT_TIMEOUT = 60.0
+MAX_INPUT_LENGTH = 100000  # 100KB max input to prevent DoS
 
 
 class EthicalZen:
@@ -135,6 +136,11 @@ class EthicalZen:
             raise ValidationError("guardrail is required", field="guardrail")
         if not input:
             raise ValidationError("input is required", field="input")
+        if len(input) > MAX_INPUT_LENGTH:
+            raise ValidationError(
+                f"input exceeds maximum length of {MAX_INPUT_LENGTH} characters",
+                field="input"
+            )
 
         response = self._client.post(
             "/api/sg/evaluate",
@@ -445,6 +451,11 @@ class AsyncEthicalZen:
             raise ValidationError("guardrail is required", field="guardrail")
         if not input:
             raise ValidationError("input is required", field="input")
+        if len(input) > MAX_INPUT_LENGTH:
+            raise ValidationError(
+                f"input exceeds maximum length of {MAX_INPUT_LENGTH} characters",
+                field="input"
+            )
 
         response = await self._client.post(
             "/api/sg/evaluate",
