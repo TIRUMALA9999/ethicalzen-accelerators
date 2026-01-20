@@ -16,6 +16,7 @@ Usage:
 """
 
 from ethicalzen.client import EthicalZen, AsyncEthicalZen
+from ethicalzen.proxy import EthicalZenProxy, ProxyResponse, wrap_openai
 from ethicalzen.models import (
     EvaluationResult,
     GuardrailConfig,
@@ -36,6 +37,10 @@ __all__ = [
     # Clients
     "EthicalZen",
     "AsyncEthicalZen",
+    # Proxy
+    "EthicalZenProxy",
+    "ProxyResponse",
+    "wrap_openai",
     # Models
     "EvaluationResult",
     "GuardrailConfig", 

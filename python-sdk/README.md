@@ -35,6 +35,7 @@ else:
 ## Features
 
 - ✅ **Evaluate** - Check content against guardrails in real-time
+- ✅ **Proxy Mode** - Transparent LLM API protection (OpenAI, Anthropic, etc.)
 - ✅ **Design** - Create guardrails from natural language descriptions
 - ✅ **Simulate** - Test guardrail accuracy with your data
 - ✅ **Optimize** - Auto-tune guardrails to improve accuracy
@@ -60,7 +61,60 @@ print(f"Score: {result.score:.2f}")    # 0.85
 print(f"Reason: {result.reason}")      # "Medical diagnosis/prescription request"
 ```
 
-### Using with LLM Applications
+### Proxy Mode (Recommended for LLM Apps)
+
+The proxy mode transparently routes your LLM API calls through EthicalZen's gateway, 
+protecting both input and output automatically:
+
+```python
+from ethicalzen import EthicalZenProxy
+
+# Create proxy client
+proxy = EthicalZenProxy(
+    api_key="your-ethicalzen-key",
+    certificate_id="dc_your_certificate",  # Your deployment certificate
+)
+
+# Use like normal OpenAI - requests are automatically protected
+response = proxy.chat_completions(
+    target_url="https://api.openai.com/v1/chat/completions",
+    target_api_key="sk-your-openai-key",
+    model="gpt-4",
+    messages=[{"role": "user", "content": "What medication should I take?"}]
+)
+
+if response.blocked:
+    print(f"Blocked: {response.block_reason}")
+else:
+    print(response.content)
+```
+
+### Wrap Existing OpenAI Client
+
+```python
+from openai import OpenAI
+from ethicalzen import wrap_openai
+
+# Your existing OpenAI client
+client = OpenAI()
+
+# Wrap it for protection
+protected = wrap_openai(
+    client,
+    api_key="your-ethicalzen-key",
+    certificate_id="dc_your_certificate"
+)
+
+# Use like normal - automatically protected!
+response = protected.chat.completions.create(
+    model="gpt-4",
+    messages=[{"role": "user", "content": "Hello!"}]
+)
+```
+
+### Manual Evaluation (Alternative)
+
+For more control, you can manually evaluate input/output:
 
 ```python
 from ethicalzen import EthicalZen
