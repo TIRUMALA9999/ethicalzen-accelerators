@@ -47,7 +47,7 @@ from ethicalzen.exceptions import (
 )
 
 
-DEFAULT_GATEWAY_URL = "https://acvps-gateway-mqnusyobga-uc.a.run.app"
+DEFAULT_GATEWAY_URL = "https://gateway.ethicalzen.ai"
 
 
 class ProxyResponse:
@@ -116,6 +116,18 @@ class ProxyResponse:
             msg = self.choices[0].get("message", {})
             return msg.get("content", "") if isinstance(msg, dict) else ""
         return ""
+    
+    @property
+    def violation(self) -> Optional[Dict[str, Any]]:
+        """Get violation details if blocked."""
+        if not self.blocked:
+            return None
+        return {
+            "guardrail": self.guardrail_id,
+            "reason": self.block_reason,
+            "score": self.score,
+            "message": self.block_reason,
+        }
     
     def __repr__(self) -> str:
         if self.blocked:

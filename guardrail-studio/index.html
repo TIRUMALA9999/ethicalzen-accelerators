@@ -498,6 +498,184 @@
             to { transform: rotate(360deg); }
         }
 
+        /* Progress Indicator */
+        .progress-indicator {
+            margin-top: 1rem;
+            padding: 1.25rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);
+            animation: progressPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes progressPulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2); }
+            50% { box-shadow: 0 4px 30px rgba(99, 102, 241, 0.4); }
+        }
+
+        .progress-header {
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .progress-title {
+            display: block;
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Button Spinner */
+        .btn-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn-primary.loading {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            cursor: wait;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--gradient-1);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .progress-step.completed {
+            color: var(--success);
+        }
+
+        .progress-step .step-icon {
+            font-size: 1rem;
+            min-width: 1.5rem;
+        }
+
+        .progress-step.active .step-icon {
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .progress-time {
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Template Suggestions */
+        .template-suggestions {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .suggestion-label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .suggestions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .suggestion-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-chip:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .suggestion-chip.recommended {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .suggestion-chip .chip-accuracy {
+            font-size: 0.6875rem;
+            padding: 0.125rem 0.375rem;
+            background: var(--success);
+            color: white;
+            border-radius: 10px;
+        }
+
+        .suggestion-chip .chip-match {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+        }
+
         /* Preview Panel */
         .preview-panel {
             position: sticky;
@@ -977,9 +1155,9 @@
                 </a>
                 <a href="https://ethicalzen.ai/docs" target="_blank" class="btn btn-ghost">Docs</a>
                 <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌓</button>
-                <button class="btn btn-secondary" onclick="showApiKeyModal()">
+                <button class="btn btn-secondary" onclick="showApiKeyModal()" id="apiKeyBtn" title="Configure API Keys">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                    API Key
+                    <span id="apiKeyLabel">API Key</span>
                 </button>
             </div>
         </div>
@@ -1004,6 +1182,33 @@
             </div>
 
             <!-- Description Card -->
+            <!-- Guardrail Name Card -->
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Guardrail Name
+                    </span>
+                    <span class="card-badge" style="background: var(--bg-tertiary); color: var(--text-muted);">Auto-generated</span>
+                </div>
+                <div class="form-group">
+                    <input 
+                        type="text"
+                        id="guardrailName" 
+                        class="form-input" 
+                        placeholder="e.g., Financial Advice Blocker, PII Detector, Customer Escalation Guard"
+                        style="padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-secondary); color: var(--text-primary); font-size: 0.9375rem;"
+                    />
+                    <p class="form-hint">Optional. Leave blank for auto-generated name based on description.</p>
+                </div>
+                <!-- Template Suggestions -->
+                <div id="templateSuggestions" class="template-suggestions" style="display: none;">
+                    <div class="suggestion-label">💡 Similar templates exist:</div>
+                    <div id="suggestionsList" class="suggestions-list"></div>
+                </div>
+            </div>
+
+            <!-- Description Card -->
             <div class="card">
                 <div class="card-header">
                     <span class="card-title">
@@ -1017,6 +1222,7 @@
                         id="description" 
                         class="form-textarea" 
                         placeholder="Example: Block AI from providing specific medical diagnoses, prescriptions, or treatment recommendations. Allow general health education and wellness tips."
+                        oninput="checkTemplateMatch()"
                     ></textarea>
                     <p class="form-hint">Be specific about what to block AND what to allow. This helps the AI generate better test cases.</p>
                 </div>
@@ -1040,7 +1246,12 @@
                             Safe (Allow)
                         </div>
                         <div class="example-list" id="safeExamples">
-                            <!-- Examples added dynamically -->
+                            <div class="example-hint" id="safeHint">
+                                <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">
+                                    💡 Add 2-3 examples of inputs that SHOULD be allowed.<br>
+                                    <span style="color: var(--success);">e.g., "What's the weather today?"</span>
+                                </span>
+                            </div>
                         </div>
                         <button class="add-example" onclick="addExample('safe')">+ Add safe example</button>
                     </div>
@@ -1052,7 +1263,12 @@
                             Unsafe (Block)
                         </div>
                         <div class="example-list" id="unsafeExamples">
-                            <!-- Examples added dynamically -->
+                            <div class="example-hint" id="unsafeHint">
+                                <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">
+                                    ⚠️ Add 2-3 examples of inputs that SHOULD be blocked.<br>
+                                    <span style="color: var(--error);">e.g., "How do I hack a server?"</span>
+                                </span>
+                            </div>
                         </div>
                         <button class="add-example" onclick="addExample('unsafe')">+ Add unsafe example</button>
                     </div>
@@ -1065,6 +1281,40 @@
                     <span class="btn-text">✨ Generate Guardrail</span>
                     <span class="spinner"></span>
                 </button>
+                
+                <!-- Progress Indicator -->
+                <div id="progressIndicator" class="progress-indicator" style="display: none;">
+                    <div class="progress-header">
+                        <span class="progress-title">🚀 Generating Guardrail</span>
+                        <span class="progress-subtitle">This typically takes 1-2 minutes</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                    <div class="progress-steps">
+                        <div class="progress-step" id="step1">
+                            <span class="step-icon">⏳</span>
+                            <span class="step-text">Analyzing description...</span>
+                        </div>
+                        <div class="progress-step" id="step2">
+                            <span class="step-icon">⏳</span>
+                            <span class="step-text">Generating examples with AI...</span>
+                        </div>
+                        <div class="progress-step" id="step3">
+                            <span class="step-icon">⏳</span>
+                            <span class="step-text">Computing semantic embeddings...</span>
+                        </div>
+                        <div class="progress-step" id="step4">
+                            <span class="step-icon">⏳</span>
+                            <span class="step-text">Running simulation tests...</span>
+                        </div>
+                        <div class="progress-step" id="step5">
+                            <span class="step-icon">⏳</span>
+                            <span class="step-text">Saving & calibrating model...</span>
+                        </div>
+                    </div>
+                    <div class="progress-time" id="progressTime">Elapsed: 0s</div>
+                </div>
             </div>
 
             <!-- Templates Section -->
@@ -1185,16 +1435,47 @@
 
     <!-- API Key Modal -->
     <div class="modal-backdrop" id="apiKeyModal">
-        <div class="modal">
-            <h3 class="modal-title">🔑 API Key</h3>
-            <p class="modal-description">Demo key pre-loaded (10 req/min). Enter your own key for unlimited use. <a href="https://ethicalzen.ai/signup" target="_blank">Get a free key →</a></p>
+        <div class="modal" style="max-width: 500px;">
+            <h3 class="modal-title">🔑 API Keys</h3>
+            
+            <!-- EthicalZen API Key -->
             <div class="form-group">
-                <label class="form-label">API Key</label>
+                <label class="form-label">EthicalZen API Key</label>
+                <p class="form-hint" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    Demo key pre-loaded (10 req/min). <a href="https://ethicalzen.ai/signup" target="_blank">Get unlimited →</a>
+                </p>
                 <input type="password" class="form-input" id="apiKeyInput" placeholder="sk-...">
             </div>
+            
+            <!-- Divider -->
+            <div style="border-top: 1px solid var(--border); margin: 1.25rem 0; position: relative;">
+                <span style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--bg-secondary); padding: 0 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Optional: Faster Generation</span>
+            </div>
+            
+            <!-- LLM API Key Section -->
+            <div class="form-group">
+                <label class="form-label">
+                    🚀 LLM API Key 
+                    <span style="font-weight: normal; font-size: 0.8rem; color: var(--text-muted);">(Groq or OpenAI)</span>
+                </label>
+                <p class="form-hint" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+                    Provide your own key to skip rate limits and generate guardrails faster.
+                </p>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    <select id="llmProvider" class="form-input" style="width: 120px;">
+                        <option value="groq">Groq</option>
+                        <option value="openai">OpenAI</option>
+                    </select>
+                    <input type="password" class="form-input" id="llmApiKeyInput" placeholder="gsk-... or sk-..." style="flex: 1;">
+                </div>
+                <p class="form-hint" style="font-size: 0.75rem; color: var(--text-muted);">
+                    🔒 Keys are stored locally in your browser only. Never sent to our servers except for generation.
+                </p>
+            </div>
+            
             <div class="modal-actions">
                 <button class="btn btn-secondary" onclick="hideApiKeyModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="saveApiKey()">Save Key</button>
+                <button class="btn btn-primary" onclick="saveApiKey()">Save Keys</button>
             </div>
         </div>
     </div>
@@ -1218,6 +1499,8 @@
         const DEMO_API_KEY = 'sk-demo-public-playground-ethicalzen';  // Public demo tenant
         let state = {
             apiKey: localStorage.getItem('ez_api_key') || DEMO_API_KEY,
+            llmApiKey: localStorage.getItem('ez_llm_api_key') || '',
+            llmProvider: localStorage.getItem('ez_llm_provider') || 'groq',
             guardrail: null,
             safeExamples: [],
             unsafeExamples: []
@@ -1307,21 +1590,44 @@
             const safeContainer = document.getElementById('safeExamples');
             const unsafeContainer = document.getElementById('unsafeExamples');
 
-            safeContainer.innerHTML = state.safeExamples.map((ex, i) => `
-                <div class="example-item">
-                    <span style="color: var(--success);">✓</span>
-                    <input type="text" value="${escapeHtml(ex)}" onchange="updateExample('safe', ${i}, this.value)">
-                    <button onclick="removeExample('safe', ${i})">×</button>
-                </div>
-            `).join('');
+            // Show hint if no examples, otherwise show examples
+            if (state.safeExamples.length === 0) {
+                safeContainer.innerHTML = `
+                    <div class="example-hint" id="safeHint">
+                        <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">
+                            💡 Add 2-3 examples of inputs that SHOULD be allowed.<br>
+                            <span style="color: var(--success);">e.g., "What's the weather today?"</span>
+                        </span>
+                    </div>
+                `;
+            } else {
+                safeContainer.innerHTML = state.safeExamples.map((ex, i) => `
+                    <div class="example-item">
+                        <span style="color: var(--success);">✓</span>
+                        <input type="text" value="${escapeHtml(ex)}" onchange="updateExample('safe', ${i}, this.value)">
+                        <button onclick="removeExample('safe', ${i})">×</button>
+                    </div>
+                `).join('');
+            }
 
-            unsafeContainer.innerHTML = state.unsafeExamples.map((ex, i) => `
-                <div class="example-item">
-                    <span style="color: var(--danger);">✗</span>
-                    <input type="text" value="${escapeHtml(ex)}" onchange="updateExample('unsafe', ${i}, this.value)">
-                    <button onclick="removeExample('unsafe', ${i})">×</button>
-                </div>
-            `).join('');
+            if (state.unsafeExamples.length === 0) {
+                unsafeContainer.innerHTML = `
+                    <div class="example-hint" id="unsafeHint">
+                        <span style="color: var(--text-muted); font-size: 0.8rem; font-style: italic;">
+                            ⚠️ Add 2-3 examples of inputs that SHOULD be blocked.<br>
+                            <span style="color: var(--error);">e.g., "How do I hack a server?"</span>
+                        </span>
+                    </div>
+                `;
+            } else {
+                unsafeContainer.innerHTML = state.unsafeExamples.map((ex, i) => `
+                    <div class="example-item">
+                        <span style="color: var(--danger);">✗</span>
+                        <input type="text" value="${escapeHtml(ex)}" onchange="updateExample('unsafe', ${i}, this.value)">
+                        <button onclick="removeExample('unsafe', ${i})">×</button>
+                    </div>
+                `).join('');
+            }
         }
 
         function updateExample(type, index, value) {
@@ -1367,7 +1673,8 @@
             const banner = document.getElementById('templateMatchBanner');
             if (banner) {
                 banner.style.display = 'flex';
-                document.getElementById('matchSubtitle').textContent = 'Checking for matches before creating a new guardrail...';
+                const subtitle = document.getElementById('matchSubtitle');
+                if (subtitle) subtitle.textContent = 'Checking for matches before creating a new guardrail...';
             }
             
             try {
@@ -1391,6 +1698,144 @@
                 // Local mock implementation for offline/demo mode
                 return getLocalRecommendation(description);
             }
+        }
+        
+        // ============================================================
+        // REAL-TIME TEMPLATE MATCHING (as user types)
+        // ============================================================
+        
+        let checkTemplateTimeout = null;
+        
+        function checkTemplateMatch() {
+            // Debounce to avoid too many calls
+            if (checkTemplateTimeout) clearTimeout(checkTemplateTimeout);
+            checkTemplateTimeout = setTimeout(() => doCheckTemplateMatch(), 500);
+        }
+        
+        function doCheckTemplateMatch() {
+            const description = document.getElementById('description').value.trim();
+            const suggestionsDiv = document.getElementById('templateSuggestions');
+            const listDiv = document.getElementById('suggestionsList');
+            
+            if (!description || description.length < 10) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            const recommendation = getLocalRecommendation(description);
+            const matches = recommendation.matches || [];
+            
+            if (matches.length === 0 || matches[0].similarity < 0.3) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            // Show top 3 matches
+            listDiv.innerHTML = matches.slice(0, 3).map(m => {
+                const isRecommended = m.similarity >= 0.7;
+                return `
+                    <div class="suggestion-chip ${isRecommended ? 'recommended' : ''}" onclick="useTemplate('${m.id}', '${m.name}')">
+                        <span>${m.name}</span>
+                        <span class="chip-accuracy">${Math.round(m.accuracy * 100)}%</span>
+                        <span class="chip-match">${Math.round(m.similarity * 100)}% match</span>
+                    </div>
+                `;
+            }).join('');
+            
+            suggestionsDiv.style.display = 'block';
+        }
+        
+        function useTemplate(templateId, templateName) {
+            // Set the name field
+            document.getElementById('guardrailName').value = templateName;
+            
+            // Load template examples if available
+            if (templates[templateId.replace('_smart', '')]) {
+                loadTemplate(templateId.replace('_smart', ''));
+            }
+            
+            showToast(`Using "${templateName}" as base template`, 'success');
+            document.getElementById('templateSuggestions').style.display = 'none';
+        }
+        
+        // Generate proper guardrail ID from name
+        function generateGuardrailId(name) {
+            if (!name) return null;
+            
+            // Convert to snake_case and add version suffix
+            const baseId = name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '')
+                .substring(0, 40);
+            
+            // Add unique suffix
+            const suffix = Date.now().toString(36).substring(-6);
+            
+            return `${baseId}_v1_${suffix}`;
+        }
+        
+        // Suggest name from description using LLM-style extraction
+        function suggestNameFromDescription(description) {
+            const lowerDesc = description.toLowerCase();
+            
+            // Extract key action words
+            const actions = {
+                'block': 'Blocker',
+                'detect': 'Detector',
+                'filter': 'Filter',
+                'prevent': 'Blocker',
+                'guard': 'Guard',
+                'check': 'Checker',
+                'validate': 'Validator',
+                'monitor': 'Monitor'
+            };
+            
+            // Extract domain words
+            const domains = {
+                'medical': 'Medical Advice',
+                'health': 'Health Advice',
+                'financial': 'Financial Advice',
+                'investment': 'Investment Advice',
+                'legal': 'Legal Advice',
+                'pii': 'PII',
+                'personal': 'Personal Data',
+                'toxic': 'Toxicity',
+                'hate': 'Hate Speech',
+                'prompt injection': 'Prompt Injection',
+                'jailbreak': 'Jailbreak',
+                'bias': 'Bias',
+                'threat': 'Threat',
+                'escalation': 'Escalation',
+                'competitor': 'Competitor Mention',
+                'copyright': 'Copyright',
+                'academic': 'Academic Integrity'
+            };
+            
+            let foundDomain = '';
+            let foundAction = 'Detector';
+            
+            for (const [key, value] of Object.entries(domains)) {
+                if (lowerDesc.includes(key)) {
+                    foundDomain = value;
+                    break;
+                }
+            }
+            
+            for (const [key, value] of Object.entries(actions)) {
+                if (lowerDesc.includes(key)) {
+                    foundAction = value;
+                    break;
+                }
+            }
+            
+            if (foundDomain) {
+                return `${foundDomain} ${foundAction}`;
+            }
+            
+            // Fallback: use first few significant words
+            const words = description.split(/\s+/).filter(w => w.length > 3).slice(0, 3);
+            return words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') + ' Guard';
         }
         
         // Local template catalog for offline recommendation
@@ -1602,6 +2047,84 @@
             };
         }
         
+        // Progress management
+        let progressInterval = null;
+        let progressStartTime = null;
+        
+        function showProgress() {
+            const indicator = document.getElementById('progressIndicator');
+            indicator.style.display = 'block';
+            progressStartTime = Date.now();
+            
+            // Reset all steps
+            for (let i = 1; i <= 5; i++) {
+                const step = document.getElementById(`step${i}`);
+                step.classList.remove('active', 'completed');
+                step.querySelector('.step-icon').textContent = '⏳';
+            }
+            document.getElementById('progressBar').style.width = '0%';
+            
+            // Start timer
+            progressInterval = setInterval(updateProgressTime, 1000);
+            
+            // Scroll progress indicator into view
+            setTimeout(() => {
+                indicator.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+        
+        function updateProgressTime() {
+            const elapsed = Math.floor((Date.now() - progressStartTime) / 1000);
+            document.getElementById('progressTime').textContent = `Elapsed: ${elapsed}s`;
+        }
+        
+        function updateProgress(stepNum, status = 'active') {
+            const step = document.getElementById(`step${stepNum}`);
+            if (!step) return;
+            
+            // Update previous steps as completed
+            for (let i = 1; i < stepNum; i++) {
+                const prevStep = document.getElementById(`step${i}`);
+                prevStep.classList.remove('active');
+                prevStep.classList.add('completed');
+                prevStep.querySelector('.step-icon').textContent = '✅';
+            }
+            
+            // Update current step
+            step.classList.remove('completed');
+            step.classList.add('active');
+            step.querySelector('.step-icon').textContent = status === 'active' ? '🔄' : '✅';
+            
+            // Update progress bar
+            const progressPercent = (stepNum / 5) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+        }
+        
+        function hideProgress(success = true) {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            
+            if (success) {
+                // Mark all steps complete
+                for (let i = 1; i <= 5; i++) {
+                    const step = document.getElementById(`step${i}`);
+                    step.classList.remove('active');
+                    step.classList.add('completed');
+                    step.querySelector('.step-icon').textContent = '✅';
+                }
+                document.getElementById('progressBar').style.width = '100%';
+                
+                // Hide after a short delay
+                setTimeout(() => {
+                    document.getElementById('progressIndicator').style.display = 'none';
+                }, 1500);
+            } else {
+                document.getElementById('progressIndicator').style.display = 'none';
+            }
+        }
+        
         async function generateGuardrail() {
             const description = document.getElementById('description').value.trim();
             
@@ -1610,16 +2133,30 @@
                 return;
             }
 
+            // Warn (but don't block) if no examples provided
+            const hasExamples = state.safeExamples.length > 0 || state.unsafeExamples.length > 0;
+            if (!hasExamples) {
+                console.log('[Studio] No examples provided - AI will generate them, but accuracy may be lower');
+            }
+
             const btn = document.getElementById('generateBtn');
+            const originalBtnText = btn.innerHTML;
             btn.classList.add('loading');
             btn.disabled = true;
+            btn.innerHTML = '<span class="btn-spinner"></span> Generating Guardrail...';
             
-            // Safety timeout - always re-enable button after 120 seconds (design takes ~30-45s)
+            // Show progress indicator
+            showProgress();
+            updateProgress(1); // Analyzing description
+            
+            // Safety timeout - always re-enable button after 180 seconds (design can take 60-90s with LLM)
             const safetyTimeout = setTimeout(() => {
                 btn.classList.remove('loading');
                 btn.disabled = false;
-                showToast('Request timed out. Please try again.', 'error');
-            }, 120000);
+                btn.innerHTML = '🚀 Generate Guardrail';
+                hideProgress(false);
+                showToast('Request timed out after 3 minutes. The backend may be busy - please try again.', 'error');
+            }, 180000);
 
             try {
                 // First, check for existing templates/composites
@@ -1633,6 +2170,8 @@
                         recommendation.recommendation === 'USE_COMPOSITE') {
                         btn.classList.remove('loading');
                         btn.disabled = false;
+                        btn.innerHTML = '🚀 Generate Guardrail';
+                        hideProgress(false);
                         return; // Let user decide
                     }
                 }
@@ -1643,10 +2182,12 @@
             } catch (error) {
                 console.error('Generation error:', error);
                 showToast(error.message || 'Failed to generate guardrail', 'error');
+                hideProgress(false);
             } finally {
                 clearTimeout(safetyTimeout);
                 btn.classList.remove('loading');
                 btn.disabled = false;
+                btn.innerHTML = '🚀 Generate Guardrail';
             }
         }
         
@@ -1659,25 +2200,75 @@
                 if (banner) banner.style.display = 'none';
             }
             
-            // Note: loading state is managed by generateGuardrail's finally block
+            // Show loading state if not already active (e.g., called from "Create New Anyway" button)
+            if (!btn.classList.contains('loading')) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+                btn.innerHTML = '<span class="btn-spinner"></span> Generating Guardrail...';
+                showProgress();
+                updateProgress(1);
+            }
+            
+            // Simulate progress steps while API call is in progress
+            // These timings approximate what the backend does (can take 60-90s with LLM)
+            updateProgress(2); // Step 2: Generating examples with AI
+            const step3Timer = setTimeout(() => updateProgress(3), 15000);  // Step 3: Computing embeddings (15s)
+            const step4Timer = setTimeout(() => updateProgress(4), 40000);  // Step 4: Running simulation (40s)
+            const step5Timer = setTimeout(() => updateProgress(5), 70000);  // Step 5: Finalizing (70s)
+            
+            // Get or generate guardrail name
+            const nameInput = document.getElementById('guardrailName').value.trim();
+            const guardrailName = nameInput || suggestNameFromDescription(description);
+            const guardrailId = generateGuardrailId(guardrailName);
+            
+            // Auto-populate name field if empty
+            if (!nameInput) {
+                document.getElementById('guardrailName').value = guardrailName;
+            }
             
             try {
+                // Build request body - include LLM key if provided for faster generation
+                const requestBody = {
+                    naturalLanguage: description,
+                    name: guardrailName,
+                    guardrailId: guardrailId,
+                    safeExamples: state.safeExamples,
+                    unsafeExamples: state.unsafeExamples
+                };
+                
+                // Add LLM key if user provided one (skips rate limiting)
+                if (state.llmApiKey) {
+                    requestBody.llmApiKey = state.llmApiKey;
+                    requestBody.llmProvider = state.llmProvider;
+                    console.log(`[Studio] Using user's ${state.llmProvider.toUpperCase()} key for generation`);
+                }
+                
                 const response = await fetch(`${API_BASE}/api/sg/design`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-API-Key': state.apiKey
                     },
-                    body: JSON.stringify({
-                        naturalLanguage: description,
-                        safeExamples: state.safeExamples,
-                        unsafeExamples: state.unsafeExamples
-                    })
+                    body: JSON.stringify(requestBody)
                 });
+                
+                // Clear the simulated progress timers
+                clearTimeout(step3Timer);
+                clearTimeout(step4Timer);
+                clearTimeout(step5Timer);
+                
                 const data = await response.json();
                 data.isNew = true;
 
                 if (data.success || data.config) {
+                    // Hide progress with success animation
+                    hideProgress(true);
+                    
+                    // Reset button state
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    btn.innerHTML = '🚀 Generate Guardrail';
+                    
                     state.guardrail = data;
                     renderGuardrailPreview(data);
                     
@@ -1702,11 +2293,26 @@
                         showToast('New guardrail created! Consider contributing it to the community.', 'success');
                     }
                 } else {
+                    hideProgress(false);
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                    btn.innerHTML = '🚀 Generate Guardrail';
                     throw new Error(data.error || 'Generation failed');
                 }
             } catch (error) {
                 console.error('Generation API error:', error);
-                throw error; // Re-throw to be caught by generateGuardrail's catch
+                hideProgress(false);
+                showToast('Generation failed: ' + (error.message || 'Unknown error'), 'error');
+                // Reset button state (important when called directly, not through generateGuardrail)
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.innerHTML = '🚀 Generate Guardrail';
+                throw error; // Re-throw to be caught by generateGuardrail's catch if applicable
+            } finally {
+                // Clear timers
+                clearTimeout(step3Timer);
+                clearTimeout(step4Timer);
+                clearTimeout(step5Timer);
             }
         }
         
@@ -2065,6 +2671,8 @@ if (result.decision === 'block') {
         function showApiKeyModal() {
             document.getElementById('apiKeyModal').classList.add('visible');
             document.getElementById('apiKeyInput').value = state.apiKey;
+            document.getElementById('llmApiKeyInput').value = state.llmApiKey || '';
+            document.getElementById('llmProvider').value = state.llmProvider || 'groq';
         }
 
         function hideApiKeyModal() {
@@ -2072,13 +2680,52 @@ if (result.decision === 'block') {
         }
 
         function saveApiKey() {
+            // Save EthicalZen API key
             const key = document.getElementById('apiKeyInput').value.trim();
             if (key) {
                 state.apiKey = key;
                 localStorage.setItem('ez_api_key', key);
-                showToast('API key saved!', 'success');
             }
+            
+            // Save LLM API key and provider
+            const llmKey = document.getElementById('llmApiKeyInput').value.trim();
+            const llmProvider = document.getElementById('llmProvider').value;
+            
+            state.llmApiKey = llmKey;
+            state.llmProvider = llmProvider;
+            localStorage.setItem('ez_llm_api_key', llmKey);
+            localStorage.setItem('ez_llm_provider', llmProvider);
+            
+            // Update the button label
+            updateApiKeyButton();
+            
+            // Show appropriate message
+            if (llmKey) {
+                showToast(`Keys saved! Using ${llmProvider.toUpperCase()} for generation.`, 'success');
+            } else {
+                showToast('EthicalZen API key saved!', 'success');
+            }
+            
             hideApiKeyModal();
+        }
+        
+        function updateApiKeyButton() {
+            const label = document.getElementById('apiKeyLabel');
+            const btn = document.getElementById('apiKeyBtn');
+            
+            if (state.llmApiKey) {
+                label.innerHTML = `🚀 ${state.llmProvider.toUpperCase()}`;
+                btn.title = `Using your ${state.llmProvider.toUpperCase()} key for fast generation`;
+                btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+            } else {
+                label.textContent = 'API Key';
+                btn.title = 'Configure API Keys';
+                btn.style.background = '';
+                btn.style.color = '';
+                btn.style.border = '';
+            }
         }
 
         // ============================================================
@@ -2128,12 +2775,17 @@ if (result.decision === 'block') {
         // Render initial state
         renderExamples();
 
-        // Show demo mode notice
-        if (state.apiKey === DEMO_API_KEY) {
-            setTimeout(() => {
-                showToast('Demo key: 10 req/min limit. Get your own key for unlimited use.', 'info');
-            }, 1000);
-        }
+        // Initialize API key button state
+        updateApiKeyButton();
+        
+        // Show mode notice
+        setTimeout(() => {
+            if (state.llmApiKey) {
+                showToast(`🚀 Using your ${state.llmProvider.toUpperCase()} key for faster generation!`, 'success');
+            } else if (state.apiKey === DEMO_API_KEY) {
+                showToast('Demo key: 10 req/min limit. Add your LLM key for faster generation.', 'info');
+            }
+        }, 1000);
     </script>
 </body>
 </html>

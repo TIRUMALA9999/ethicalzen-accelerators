@@ -66,3 +66,4 @@ class TimeoutError(EthicalZenError):
     def __init__(self, message: str = "Request timed out"):
         super().__init__(message, status_code=408)
 
+

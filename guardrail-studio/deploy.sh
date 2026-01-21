@@ -54,3 +54,4 @@ echo "      gcloud run domain-mappings create --service ${SERVICE_NAME} --domain
 echo ""
 echo "   2. Or use Load Balancer for custom domain with SSL"
 
+
