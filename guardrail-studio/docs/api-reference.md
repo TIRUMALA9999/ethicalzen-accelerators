@@ -10,10 +10,10 @@ https://api.ethicalzen.ai/v1
 
 ## Authentication
 
-All API requests require an API key in the Authorization header:
+All API requests require an API key in the X-API-Key header:
 
 ```
-Authorization: Bearer sk-your-api-key
+X-API-Key: your-api-key
 ```
 
 Get your API key at [ethicalzen.ai/dashboard](https://ethicalzen.ai/dashboard).
