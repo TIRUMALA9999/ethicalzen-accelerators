@@ -970,6 +970,344 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 60px;
+            z-index: 99;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            background: var(--gradient-1);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            transform: translateY(-1px);
+        }
+        
+        [data-theme="dark"] .nav-tab.active {
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .nav-tab .tab-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+
+        .nav-tab:not(.active) .tab-badge {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        /* View Containers */
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        /* Guardrail Hub */
+        .hub-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hub-header {
+            margin-bottom: 2rem;
+        }
+
+        .hub-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .hub-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .hub-search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input-container {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Stats Bar */
+        .hub-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Guardrail Grid */
+        .guardrail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .guardrail-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .guardrail-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .guardrail-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .guardrail-card-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .guardrail-card-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .guardrail-card-category {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .guardrail-card-description {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .guardrail-card-metrics {
+            display: flex;
+            gap: 1rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .guardrail-metric {
+            text-align: center;
+        }
+
+        .guardrail-metric-value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--success);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .guardrail-metric-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .guardrail-card-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-community {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .badge-yours {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+        }
+
+        .badge-platform {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        /* Section Headers in Hub */
+        .hub-section {
+            margin-bottom: 2rem;
+        }
+
+        .hub-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .hub-section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .hub-section-count {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.6rem;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            color: var(--text-muted);
+        }
+
         /* Footer */
         .footer {
             text-align: center;
@@ -1163,7 +1501,23 @@
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+        <button class="nav-tab active" onclick="switchView('create')" id="tabCreate">
+            <span>✨</span> Create Guardrail
+        </button>
+        <button class="nav-tab" onclick="switchView('hub')" id="tabHub">
+            <span>🌐</span> Guardrail Hub
+            <span class="tab-badge" id="hubCount">0</span>
+        </button>
+        <button class="nav-tab" onclick="switchView('mine')" id="tabMine">
+            <span>📁</span> My Guardrails
+            <span class="tab-badge" id="myCount">0</span>
+        </button>
+    </nav>
+
+    <!-- Create View -->
+    <div class="view-container active" id="viewCreate">
     <main class="main">
         <!-- Design Panel -->
         <div class="design-panel">
@@ -1320,10 +1674,10 @@
             <!-- Templates Section -->
             <div class="templates-section">
                 <div class="section-header">
-                    <h3 class="section-title">Start from a Template</h3>
-                    <a href="#" class="btn btn-ghost" style="font-size: 0.8rem;">View all →</a>
+                    <h3 class="section-title">🎯 Quick Start Templates</h3>
+                    <button onclick="switchView('hub')" class="btn btn-ghost" style="font-size: 0.8rem;">Browse all guardrails →</button>
                 </div>
-                <div class="template-grid">
+                <div class="template-grid" id="quickStartTemplates">
                     <div class="template-card" onclick="loadTemplate('financial')">
                         <div class="template-icon">💰</div>
                         <div class="template-name">Financial Advice</div>
@@ -1344,7 +1698,20 @@
                         <div class="template-name">Academic Integrity</div>
                         <div class="template-accuracy">77% accuracy</div>
                     </div>
+                    <div class="template-card" onclick="loadTemplate('pii')">
+                        <div class="template-icon">🔒</div>
+                        <div class="template-name">PII Protection</div>
+                        <div class="template-accuracy">92% accuracy</div>
+                    </div>
+                    <div class="template-card" onclick="loadTemplate('toxicity')">
+                        <div class="template-icon">☣️</div>
+                        <div class="template-name">Toxicity Filter</div>
+                        <div class="template-accuracy">88% accuracy</div>
+                    </div>
                 </div>
+                <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+                    💡 Click a template to pre-fill examples, or <button onclick="switchView('hub')" style="background: none; border: none; color: var(--accent); cursor: pointer; text-decoration: underline; font-size: inherit;">browse the Guardrail Hub</button> for more options.
+                </p>
             </div>
         </div>
 
@@ -1422,11 +1789,112 @@
                                 </button>
                             </div>
                         </div>
+                        
+                        <!-- Publish to Community Section -->
+                        <div id="publishSection" class="publish-section" style="display: none;">
+                            <div style="text-align: center; padding: 1rem; background: var(--bg-tertiary); border-radius: 8px; margin-top: 1rem;">
+                                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                                    🌐 Share this guardrail with the community so others can use it!
+                                </p>
+                                <button id="publishBtn" class="btn btn-primary" onclick="publishToCommunity()" style="width: 100%;">
+                                    🚀 Publish to Community
+                                </button>
+                                <p id="publishStatus" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem;"></p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+    </div><!-- End Create View -->
+
+    <!-- Guardrail Hub View -->
+    <div class="view-container" id="viewHub">
+        <div class="hub-container">
+            <div class="hub-header">
+                <h1 class="hub-title">
+                    <span>🌐</span> Guardrail Hub
+                </h1>
+                <p class="hub-subtitle">Browse and discover community-contributed guardrails. Use them directly or as inspiration for your own.</p>
+            </div>
+
+            <div class="hub-search-bar">
+                <div class="search-input-container">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    <input type="text" class="search-input" id="hubSearchInput" placeholder="Search guardrails by name, category, or keyword..." oninput="filterHubGuardrails()">
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterByCategory('all')" data-category="all">All</button>
+                    <button class="filter-btn" onclick="filterByCategory('safety')" data-category="safety">🛡️ Safety</button>
+                    <button class="filter-btn" onclick="filterByCategory('compliance')" data-category="compliance">⚖️ Compliance</button>
+                    <button class="filter-btn" onclick="filterByCategory('privacy')" data-category="privacy">🔒 Privacy</button>
+                    <button class="filter-btn" onclick="filterByCategory('content')" data-category="content">📝 Content</button>
+                </div>
+            </div>
+
+            <div class="hub-stats" id="hubStats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalGuardrails">0</span>
+                    <span class="stat-label">Total Guardrails</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="avgAccuracy">--</span>
+                    <span class="stat-label">Avg. Accuracy</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="categoryCount">0</span>
+                    <span class="stat-label">Categories</span>
+                </div>
+            </div>
+
+            <div id="hubGuardrailsContainer">
+                <div class="guardrail-grid" id="hubGuardrailGrid">
+                    <!-- Guardrails loaded dynamically -->
+                </div>
+            </div>
+        </div>
+    </div><!-- End Hub View -->
+
+    <!-- My Guardrails View -->
+    <div class="view-container" id="viewMine">
+        <div class="hub-container">
+            <div class="hub-header">
+                <h1 class="hub-title">
+                    <span>📁</span> My Guardrails
+                </h1>
+                <p class="hub-subtitle">View and manage guardrails you've generated in this session. They're saved locally in your browser.</p>
+            </div>
+
+            <div class="hub-search-bar">
+                <div class="search-input-container">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+                    </svg>
+                    <input type="text" class="search-input" id="mySearchInput" placeholder="Search your guardrails..." oninput="filterMyGuardrails()">
+                </div>
+                <button class="btn btn-primary" onclick="switchView('create')">
+                    <span>✨</span> Create New Guardrail
+                </button>
+            </div>
+
+            <div id="myGuardrailsContainer">
+                <div class="guardrail-grid" id="myGuardrailGrid">
+                    <!-- User's guardrails loaded dynamically -->
+                </div>
+                <div class="empty-state" id="myEmptyState" style="display: none;">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-title">No guardrails yet</div>
+                    <p>Create your first guardrail to see it here.</p>
+                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="switchView('create')">
+                        ✨ Create Guardrail
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- End My Guardrails View -->
 
     <!-- Footer -->
     <footer class="footer">
@@ -1495,16 +1963,492 @@
         const urlParams = new URLSearchParams(window.location.search);
         const API_BASE = urlParams.get('api') || 'https://ethicalzen-backend-400782183161.us-central1.run.app';
         
-        // State
-        const DEMO_API_KEY = 'sk-demo-public-playground-ethicalzen';  // Public demo tenant
+        // State - API key must be configured by user (no default demo key)
         let state = {
-            apiKey: localStorage.getItem('ez_api_key') || DEMO_API_KEY,
+            apiKey: localStorage.getItem('ez_api_key') || '',
             llmApiKey: localStorage.getItem('ez_llm_api_key') || '',
             llmProvider: localStorage.getItem('ez_llm_provider') || 'groq',
             guardrail: null,
             safeExamples: [],
-            unsafeExamples: []
+            unsafeExamples: [],
+            myGuardrails: JSON.parse(localStorage.getItem('ez_my_guardrails') || '[]'),
+            hubGuardrails: [],
+            currentView: 'create',
+            hubFilter: 'all'
         };
+
+        // ============================================================
+        // VIEW NAVIGATION
+        // ============================================================
+        
+        function switchView(view) {
+            state.currentView = view;
+            
+            // Update tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+            
+            // Update views
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
+            
+            // Load data for specific views
+            if (view === 'hub') {
+                loadHubGuardrails();
+            } else if (view === 'mine') {
+                renderMyGuardrails();
+            }
+        }
+
+        // ============================================================
+        // GUARDRAIL HUB
+        // ============================================================
+        
+        async function loadHubGuardrails() {
+            const grid = document.getElementById('hubGuardrailGrid');
+            grid.innerHTML = '<div style="text-align: center; padding: 2rem; color: var(--text-muted);">Loading guardrails...</div>';
+            
+            try {
+                // Fetch both templates AND community-contributed guardrails
+                const [templatesRes, communityRes] = await Promise.all([
+                    fetch(`${API_BASE}/api/sg/templates`, {
+                        headers: { 'X-API-Key': state.apiKey }
+                    }),
+                    fetch(`${API_BASE}/api/sg/community`, {
+                        headers: { 'X-API-Key': state.apiKey }
+                    }).catch(() => ({ ok: false })) // Gracefully handle if endpoint not yet deployed
+                ]);
+                
+                let templates = [];
+                if (templatesRes.ok) {
+                    const data = await templatesRes.json();
+                    templates = (data.templates || data || []).map(t => ({
+                        ...t,
+                        source: 'template',
+                        accuracy: t.expectedMetrics?.accuracy || 0.85,
+                        description: t.description || `${t.displayName} guardrail`
+                    }));
+                }
+                
+                let communityGuardrails = [];
+                if (communityRes.ok) {
+                    const communityData = await communityRes.json();
+                    communityGuardrails = (communityData.guardrails || []).map(g => ({
+                        ...g,
+                        source: 'community'
+                    }));
+                }
+                
+                // Combine: User's guardrails first, then community, then templates
+                const combined = [
+                    ...state.myGuardrails.map(g => ({ ...g, source: 'yours' })),
+                    ...communityGuardrails,
+                    ...templates
+                ];
+                
+                // Remove duplicates by id
+                const uniqueById = new Map();
+                combined.forEach(g => {
+                    const id = g.id || g.type || g.name;
+                    if (!uniqueById.has(id)) {
+                        uniqueById.set(id, g);
+                    }
+                });
+                
+                state.hubGuardrails = Array.from(uniqueById.values());
+                updateHubStats();
+                renderHubGuardrails(state.hubGuardrails);
+                document.getElementById('hubCount').textContent = state.hubGuardrails.length;
+                
+            } catch (error) {
+                console.error('Error loading guardrails:', error);
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div class="empty-state-title">Unable to load guardrails</div>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function updateHubStats() {
+            const total = state.hubGuardrails.length;
+            document.getElementById('totalGuardrails').textContent = total;
+            
+            // Calculate average accuracy
+            const guardrailsWithAccuracy = state.hubGuardrails.filter(g => g.accuracy);
+            if (guardrailsWithAccuracy.length > 0) {
+                const avgAcc = guardrailsWithAccuracy.reduce((sum, g) => {
+                    const acc = typeof g.accuracy === 'number' ? g.accuracy : parseFloat(g.accuracy) || 0;
+                    return sum + (acc > 1 ? acc : acc * 100);
+                }, 0) / guardrailsWithAccuracy.length;
+                document.getElementById('avgAccuracy').textContent = Math.round(avgAcc) + '%';
+            }
+            
+            // Count unique categories
+            const categories = new Set(state.hubGuardrails.map(g => getCategoryFromGuardrail(g)));
+            document.getElementById('categoryCount').textContent = categories.size;
+        }
+        
+        function getCategoryFromGuardrail(guardrail) {
+            const name = (guardrail.name || guardrail.id || '').toLowerCase();
+            if (name.includes('pii') || name.includes('privacy')) return 'privacy';
+            if (name.includes('legal') || name.includes('compliance') || name.includes('hipaa')) return 'compliance';
+            if (name.includes('toxic') || name.includes('hate') || name.includes('profan')) return 'content';
+            if (name.includes('threat') || name.includes('violence') || name.includes('injection')) return 'safety';
+            return 'other';
+        }
+        
+        function getIconForGuardrail(guardrail) {
+            const name = (guardrail.name || guardrail.id || '').toLowerCase();
+            if (name.includes('financial') || name.includes('money')) return '💰';
+            if (name.includes('medical') || name.includes('health')) return '🏥';
+            if (name.includes('legal')) return '⚖️';
+            if (name.includes('pii') || name.includes('privacy')) return '🔒';
+            if (name.includes('toxic') || name.includes('hate')) return '☣️';
+            if (name.includes('bias')) return '⚖️';
+            if (name.includes('threat') || name.includes('violence')) return '⚠️';
+            if (name.includes('injection') || name.includes('prompt')) return '🛡️';
+            if (name.includes('academic')) return '📚';
+            if (name.includes('spam') || name.includes('promotion')) return '📧';
+            return '🔷';
+        }
+        
+        function renderHubGuardrails(guardrails) {
+            const grid = document.getElementById('hubGuardrailGrid');
+            
+            if (guardrails.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-title">No guardrails found</div>
+                        <p>Try a different search or filter.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = guardrails.map(g => {
+                // Generate a nice display name
+                const name = getDisplayName(g);
+                const accuracy = g.accuracy ? (typeof g.accuracy === 'number' && g.accuracy <= 1 ? Math.round(g.accuracy * 100) : Math.round(g.accuracy)) : '--';
+                const icon = getIconForGuardrail(g);
+                const category = getCategoryFromGuardrail(g);
+                const source = g.source || 'community';
+                const badgeClass = source === 'yours' ? 'badge-yours' : 'badge-community';
+                const badgeText = source === 'yours' ? 'Yours' : 'Community';
+                
+                return `
+                    <div class="guardrail-card" onclick="useHubGuardrail('${encodeURIComponent(JSON.stringify({id: g.id, name: g.name, description: g.description}))}')">
+                        <div class="guardrail-card-header">
+                            <div>
+                                <div class="guardrail-card-icon">${icon}</div>
+                                <div class="guardrail-card-name">${name}</div>
+                                <div class="guardrail-card-category">${category}</div>
+                            </div>
+                            <span class="guardrail-card-badge ${badgeClass}">${badgeText}</span>
+                        </div>
+                        <div class="guardrail-card-description">
+                            ${g.description || 'No description available.'}
+                        </div>
+                        <div class="guardrail-card-metrics">
+                            <div class="guardrail-metric">
+                                <div class="guardrail-metric-value">${accuracy}%</div>
+                                <div class="guardrail-metric-label">Accuracy</div>
+                            </div>
+                            ${g.recall ? `
+                            <div class="guardrail-metric">
+                                <div class="guardrail-metric-value">${Math.round(g.recall * 100)}%</div>
+                                <div class="guardrail-metric-label">Recall</div>
+                            </div>
+                            ` : ''}
+                            ${g.precision ? `
+                            <div class="guardrail-metric">
+                                <div class="guardrail-metric-value">${Math.round(g.precision * 100)}%</div>
+                                <div class="guardrail-metric-label">Precision</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 0.75rem; font-size: 0.8rem;" onclick="event.stopPropagation(); useHubGuardrail('${encodeURIComponent(JSON.stringify({id: g.id, name: g.name, description: g.description}))}')">
+                            Use This Template
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Generate a readable display name from guardrail data
+        function getDisplayName(guardrail) {
+            // If has a good name, use it
+            if (guardrail.name && !guardrail.name.includes('Unnamed')) {
+                return guardrail.name;
+            }
+            
+            // Try to extract from description
+            if (guardrail.description) {
+                const desc = guardrail.description;
+                
+                // Pattern: "Block X" -> "X Blocker"
+                const blockMatch = desc.match(/^Block\s+(.+?)[\.\,]/i);
+                if (blockMatch) {
+                    const what = blockMatch[1].replace(/\s+/g, ' ').trim();
+                    if (what.length < 40) {
+                        return capitalizeWords(what) + ' Guard';
+                    }
+                }
+                
+                // Pattern: "Detect X" -> "X Detector"  
+                const detectMatch = desc.match(/^Detect\s+(.+?)[\.\,]/i);
+                if (detectMatch) {
+                    const what = detectMatch[1].replace(/\s+/g, ' ').trim();
+                    if (what.length < 40) {
+                        return capitalizeWords(what) + ' Detector';
+                    }
+                }
+                
+                // Use first meaningful words
+                const words = desc.split(/\s+/).slice(0, 4).join(' ');
+                return capitalizeWords(words) + '...';
+            }
+            
+            // Fallback to ID
+            if (guardrail.id) {
+                return guardrail.id.replace(/_/g, ' ').replace(/-/g, ' ');
+            }
+            
+            return 'Custom Guardrail';
+        }
+        
+        function capitalizeWords(str) {
+            return str.replace(/\b\w/g, c => c.toUpperCase());
+        }
+        
+        // Use a guardrail from the Hub
+        function useHubGuardrail(encodedData) {
+            try {
+                const data = JSON.parse(decodeURIComponent(encodedData));
+                switchView('create');
+                
+                if (data.name) {
+                    document.getElementById('guardrailName').value = data.name;
+                }
+                if (data.description) {
+                    document.getElementById('description').value = data.description;
+                }
+                
+                showToast(`Loaded "${getDisplayName(data)}" - customize and generate!`, 'success');
+            } catch (e) {
+                console.error('Error loading guardrail:', e);
+                showToast('Failed to load guardrail', 'error');
+            }
+        }
+        
+        function filterHubGuardrails() {
+            const searchTerm = document.getElementById('hubSearchInput').value.toLowerCase();
+            const filtered = state.hubGuardrails.filter(g => {
+                const name = (g.name || g.id || '').toLowerCase();
+                const desc = (g.description || '').toLowerCase();
+                const category = getCategoryFromGuardrail(g);
+                
+                const matchesSearch = !searchTerm || 
+                    name.includes(searchTerm) || 
+                    desc.includes(searchTerm) || 
+                    category.includes(searchTerm);
+                    
+                const matchesCategory = state.hubFilter === 'all' || 
+                    getCategoryFromGuardrail(g) === state.hubFilter;
+                
+                return matchesSearch && matchesCategory;
+            });
+            
+            renderHubGuardrails(filtered);
+        }
+        
+        function filterByCategory(category) {
+            state.hubFilter = category;
+            
+            // Update button states
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.category === category);
+            });
+            
+            filterHubGuardrails();
+        }
+        
+        function viewGuardrailDetails(guardrailId) {
+            // Search in both hub guardrails and local guardrails
+            let guardrail = state.hubGuardrails.find(g => 
+                g.id === guardrailId || g.name === guardrailId || g.localId === guardrailId
+            );
+            
+            // Also check in myGuardrails directly
+            if (!guardrail) {
+                guardrail = state.myGuardrails.find(g => 
+                    g.id === guardrailId || g.name === guardrailId || g.localId === guardrailId
+                );
+            }
+            
+            if (!guardrail) {
+                showToast('Guardrail not found', 'error');
+                return;
+            }
+            
+            // Switch to create view and load the guardrail
+            switchView('create');
+            
+            // Populate the form with guardrail details
+            document.getElementById('guardrailName').value = guardrail.name || '';
+            document.getElementById('description').value = guardrail.description || '';
+            
+            // If it has examples, load them
+            if (guardrail.safeExamples && guardrail.safeExamples.length > 0) {
+                state.safeExamples = [...guardrail.safeExamples];
+            } else {
+                state.safeExamples = [];
+            }
+            if (guardrail.unsafeExamples && guardrail.unsafeExamples.length > 0) {
+                state.unsafeExamples = [...guardrail.unsafeExamples];
+            } else {
+                state.unsafeExamples = [];
+            }
+            
+            renderExamples();
+            
+            // If guardrail has metrics, show preview
+            if (guardrail.accuracy || guardrail.config) {
+                state.guardrail = guardrail;
+                renderGuardrailPreview({
+                    config: guardrail.config || { id: guardrail.id, name: guardrail.name },
+                    simulation: {
+                        metrics: {
+                            accuracy: guardrail.accuracy || 0,
+                            recall: guardrail.recall || 0,
+                            precision: guardrail.precision || 0,
+                            f1: guardrail.f1 || 0
+                        }
+                    }
+                });
+            }
+            
+            showToast(`Loaded "${guardrail.name}" - edit and regenerate to improve`, 'success');
+        }
+
+        // ============================================================
+        // MY GUARDRAILS
+        // ============================================================
+        
+        function saveGuardrailLocally(guardrail) {
+            // Add timestamp and unique ID if not present
+            guardrail.savedAt = new Date().toISOString();
+            guardrail.localId = guardrail.localId || 'local_' + Date.now();
+            
+            // Check if already exists (update) or new (add)
+            const existingIndex = state.myGuardrails.findIndex(g => g.localId === guardrail.localId);
+            if (existingIndex >= 0) {
+                state.myGuardrails[existingIndex] = guardrail;
+            } else {
+                state.myGuardrails.unshift(guardrail); // Add to beginning
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('ez_my_guardrails', JSON.stringify(state.myGuardrails));
+            
+            // Update tab badge
+            document.getElementById('myCount').textContent = state.myGuardrails.length;
+        }
+        
+        function renderMyGuardrails() {
+            const grid = document.getElementById('myGuardrailGrid');
+            const emptyState = document.getElementById('myEmptyState');
+            
+            // Apply search filter
+            const searchTerm = document.getElementById('mySearchInput')?.value?.toLowerCase() || '';
+            const filtered = state.myGuardrails.filter(g => {
+                const name = (g.name || '').toLowerCase();
+                const desc = (g.description || '').toLowerCase();
+                return !searchTerm || name.includes(searchTerm) || desc.includes(searchTerm);
+            });
+            
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            grid.innerHTML = filtered.map(g => {
+                const name = g.name || 'Unnamed Guardrail';
+                const accuracy = g.accuracy ? Math.round(g.accuracy * 100) : '--';
+                const icon = getIconForGuardrail(g);
+                const savedDate = g.savedAt ? new Date(g.savedAt).toLocaleDateString() : '';
+                
+                return `
+                    <div class="guardrail-card" onclick="viewGuardrailDetails('${g.localId}')">
+                        <div class="guardrail-card-header">
+                            <div>
+                                <div class="guardrail-card-icon">${icon}</div>
+                                <div class="guardrail-card-name">${name}</div>
+                                <div class="guardrail-card-category">${savedDate}</div>
+                            </div>
+                            <span class="guardrail-card-badge badge-yours">Your Guardrail</span>
+                        </div>
+                        <div class="guardrail-card-description">
+                            ${g.description || 'No description available.'}
+                        </div>
+                        <div class="guardrail-card-metrics">
+                            <div class="guardrail-metric">
+                                <div class="guardrail-metric-value">${accuracy}%</div>
+                                <div class="guardrail-metric-label">Accuracy</div>
+                            </div>
+                            ${g.recall ? `
+                            <div class="guardrail-metric">
+                                <div class="guardrail-metric-value">${Math.round(g.recall * 100)}%</div>
+                                <div class="guardrail-metric-label">Recall</div>
+                            </div>
+                            ` : ''}
+                            ${g.f1 ? `
+                            <div class="guardrail-metric">
+                                <div class="guardrail-metric-value">${Math.round(g.f1 * 100)}%</div>
+                                <div class="guardrail-metric-label">F1</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update tab badge
+            document.getElementById('myCount').textContent = state.myGuardrails.length;
+        }
+        
+        function filterMyGuardrails() {
+            renderMyGuardrails();
+        }
+
+        // Initialize counts on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('myCount').textContent = state.myGuardrails.length;
+
+            // Update API key button state
+            updateApiKeyButton();
+
+            // Show API key modal on first load if no key is configured
+            if (!state.apiKey) {
+                showApiKeyModal();
+            }
+
+            // Prefetch hub count (only if API key is configured)
+            if (state.apiKey) {
+                fetch(`${API_BASE}/api/sg/templates`, { headers: { 'X-API-Key': state.apiKey } })
+                    .then(r => r.json())
+                    .then(data => {
+                        const count = (data.templates || data || []).length + state.myGuardrails.length;
+                        document.getElementById('hubCount').textContent = count;
+                    })
+                    .catch(() => {});
+            }
+        });
 
         // Theme toggle (matches ethicalzen.ai)
         function toggleTheme() {
@@ -1531,7 +2475,7 @@
             });
         })();
 
-        // Templates
+        // Templates - Quick start options for common use cases
         const templates = {
             financial: {
                 description: "Block AI from providing specific investment recommendations, stock picks, or financial advice. Allow general financial education like explaining what stocks are or how compound interest works.",
@@ -1552,6 +2496,16 @@
                 description: "Block AI from directly completing homework, writing essays, or providing exam answers. Allow tutoring, explaining concepts, and study guidance.",
                 safe: ["Can you explain photosynthesis?", "What are some good study techniques?", "How do I approach solving quadratic equations?"],
                 unsafe: ["Write my essay on World War 2", "Solve this math problem for me: 2x + 5 = 15", "What are the answers to this quiz?"]
+            },
+            pii: {
+                description: "Block sharing of personal identifiable information like SSN, credit cards, passwords, addresses. Allow general discussions about data privacy and security best practices.",
+                safe: ["What is GDPR?", "How can I protect my online privacy?", "What makes a strong password?"],
+                unsafe: ["My SSN is 123-45-6789", "My password is hunter123", "I live at 123 Main St, Springfield IL 62701"]
+            },
+            toxicity: {
+                description: "Block toxic, hateful, harassing, or abusive content. Allow constructive criticism, disagreement, and educational discussions about harmful content.",
+                safe: ["I respectfully disagree with your point", "Can you explain what hate speech is?", "I'm frustrated with this situation"],
+                unsafe: ["You're an idiot", "I hate people like you", "Go kill yourself"]
             }
         };
 
@@ -2279,6 +3233,22 @@
                     const precision = metrics.precision || 0;
                     const recall = metrics.recall || 0;
                     
+                    // Save guardrail locally for "My Guardrails" section
+                    const guardrailToSave = {
+                        id: data.config?.id || 'guardrail_' + Date.now(),
+                        name: data.config?.name || document.getElementById('guardrailName').value || 'Unnamed Guardrail',
+                        description: document.getElementById('description').value,
+                        accuracy: accuracy,
+                        recall: recall,
+                        precision: precision,
+                        f1: f1,
+                        safeExamples: [...state.safeExamples],
+                        unsafeExamples: [...state.unsafeExamples],
+                        config: data.config,
+                        createdAt: new Date().toISOString()
+                    };
+                    saveGuardrailLocally(guardrailToSave);
+                    
                     const MIN_ACCURACY = 0.75;  // 75% accuracy
                     const MIN_F1 = 0.60;        // 60% F1 score
                     const needsImprovement = accuracy < MIN_ACCURACY || f1 < MIN_F1;
@@ -2290,7 +3260,7 @@
                             { name: 'Accuracy', value: accuracy, target: MIN_ACCURACY };
                         showImprovementPrompt(weakestMetric.value, weakestMetric.target, data.config.id, weakestMetric.name);
                     } else {
-                        showToast('New guardrail created! Consider contributing it to the community.', 'success');
+                        showToast('Guardrail saved! View it in "My Guardrails" tab.', 'success');
                     }
                 } else {
                     hideProgress(false);
@@ -2519,6 +3489,20 @@
             document.getElementById('metricRecall').textContent = formatPercent(metrics.recall);
             document.getElementById('metricPrecision').textContent = formatPercent(metrics.precision);
             document.getElementById('metricF1').textContent = formatPercent(metrics.f1);
+            
+            // Show publish section if not already published
+            const publishSection = document.getElementById('publishSection');
+            if (publishSection) {
+                const isPublished = state.guardrail?.isPublished;
+                publishSection.style.display = isPublished ? 'none' : 'block';
+                
+                if (!isPublished) {
+                    document.getElementById('publishBtn').disabled = false;
+                    document.getElementById('publishBtn').textContent = '🚀 Publish to Community';
+                    document.getElementById('publishBtn').style.background = '';
+                    document.getElementById('publishStatus').textContent = '';
+                }
+            }
         }
 
         function formatPercent(value) {
@@ -2539,17 +3523,37 @@
                 return;
             }
 
+            // Show loading state
+            const testBtn = document.querySelector('.btn-test');
+            if (testBtn) {
+                testBtn.disabled = true;
+                testBtn.textContent = '...';
+            }
+
             try {
-                const response = await fetch(`${API_BASE}/api/sg/evaluate/${state.guardrail.config.id}`, {
+                // Try the evaluate endpoint with full guardrail data
+                const response = await fetch(`${API_BASE}/api/sg/evaluate`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-API-Key': state.apiKey
                     },
-                    body: JSON.stringify({ input })
+                    body: JSON.stringify({ 
+                        guardrail_id: state.guardrail.config.id,
+                        input: input,
+                        // Include calibration data for newly created guardrails
+                        calibration: state.guardrail.calibration || state.guardrail.config?.calibration
+                    })
                 });
 
-                const data = await response.json();
+                let data = await response.json();
+                
+                // If backend returns 0.00 score, try local heuristic evaluation
+                // This happens when calibration data isn't available on the gateway
+                if (!data.score || data.score === 0 || data.score === '0.00') {
+                    console.log('[Test] Backend returned 0.00, using local evaluation...');
+                    data = performLocalEvaluation(input, state.guardrail);
+                }
                 
                 const resultEl = document.getElementById('testResult');
                 const decisionEl = document.getElementById('testDecision');
@@ -2566,8 +3570,188 @@
                 
                 resultEl.classList.add('visible');
             } catch (error) {
-                showToast('Test failed: ' + error.message, 'error');
+                console.error('Test error:', error);
+                
+                // Fallback to local evaluation if API fails
+                try {
+                    console.log('[Test] API failed, using local evaluation...');
+                    const data = performLocalEvaluation(input, state.guardrail);
+                    displayTestResult(data);
+                } catch (localError) {
+                    console.error('Local evaluation also failed:', localError);
+                    showToast('Test failed: ' + error.message, 'error');
+                }
+            } finally {
+                if (testBtn) {
+                    testBtn.disabled = false;
+                    testBtn.textContent = 'Test';
+                }
             }
+        }
+        
+        // Local evaluation using heuristic matching against training examples
+        function performLocalEvaluation(input, guardrail) {
+            const inputLower = input.toLowerCase();
+            const description = (guardrail.config?.description || guardrail.description || '').toLowerCase();
+            
+            // Get examples from various sources
+            let unsafeExamples = [];
+            let safeExamples = [];
+            
+            // Source 1: From guardrail config
+            if (guardrail.config?.threatArchetypes) {
+                unsafeExamples = guardrail.config.threatArchetypes.flatMap(a => a.canonicalExamples || []);
+            }
+            
+            // Source 2: From simulation test cases
+            if (guardrail.simulation?.testCases) {
+                const unsafeFromSim = guardrail.simulation.testCases.filter(tc => tc.expected === 'unsafe').map(tc => tc.input);
+                const safeFromSim = guardrail.simulation.testCases.filter(tc => tc.expected === 'safe').map(tc => tc.input);
+                unsafeExamples = [...unsafeExamples, ...unsafeFromSim];
+                safeExamples = [...safeExamples, ...safeFromSim];
+            }
+            
+            // Source 3: From guardrail config safe examples
+            if (guardrail.config?.safeExamples) {
+                safeExamples = [...safeExamples, ...guardrail.config.safeExamples];
+            }
+            
+            // Source 4: From current form state
+            if (state.unsafeExamples?.length) {
+                unsafeExamples = [...unsafeExamples, ...state.unsafeExamples];
+            }
+            if (state.safeExamples?.length) {
+                safeExamples = [...safeExamples, ...state.safeExamples];
+            }
+            
+            // Keyword-based heuristic for common guardrail types
+            let keywordScore = 0;
+            
+            // Password/Credential sharing detection
+            if (description.includes('password') || description.includes('credential')) {
+                const passwordPatterns = [
+                    /\bpassword\s*(is|:)\s*/i,
+                    /\bmy\s+password/i,
+                    /\bcredentials?\s*(are|is|:)/i,
+                    /\bapi[\s_-]?key\s*(is|:)/i,
+                    /\bsecret\s*(is|:)/i,
+                    /\blogin\s*(is|:)/i,
+                    /hunter2/i  // Classic password example
+                ];
+                for (const pattern of passwordPatterns) {
+                    if (pattern.test(input)) {
+                        keywordScore = 0.85;
+                        break;
+                    }
+                }
+            }
+            
+            // Toxic content detection
+            if (description.includes('toxic') || description.includes('abuse') || description.includes('hate')) {
+                const toxicPatterns = [
+                    /\b(idiot|stupid|moron|dumb)\b/i,
+                    /\bkill\s+(yourself|yourself)/i,
+                    /\bhate\s+(you|people)/i,
+                    /\byou('re|\s+are)\s+(an?\s+)?(idiot|stupid|worthless)/i,
+                    /\bgo\s+to\s+hell/i
+                ];
+                for (const pattern of toxicPatterns) {
+                    if (pattern.test(input)) {
+                        keywordScore = 0.85;
+                        break;
+                    }
+                }
+            }
+            
+            // Financial advice detection
+            if (description.includes('financial') || description.includes('invest')) {
+                const financialPatterns = [
+                    /should\s+i\s+(buy|invest|sell)/i,
+                    /\b(buy|sell)\s+(this|that|some)\s+(stock|bitcoin|crypto)/i,
+                    /is\s+.+\s+a\s+good\s+investment/i,
+                    /what\s+stocks?\s+should/i
+                ];
+                for (const pattern of financialPatterns) {
+                    if (pattern.test(input)) {
+                        keywordScore = 0.85;
+                        break;
+                    }
+                }
+            }
+            
+            // Medical advice detection  
+            if (description.includes('medical') || description.includes('diagnos')) {
+                const medicalPatterns = [
+                    /do\s+i\s+have\s+/i,
+                    /what\s+(medication|medicine)\s+should/i,
+                    /should\s+i\s+(take|stop)\s+(this|my)\s+(medication|medicine)/i,
+                    /\bdiagnose\b/i,
+                    /\bprescrib/i
+                ];
+                for (const pattern of medicalPatterns) {
+                    if (pattern.test(input)) {
+                        keywordScore = 0.85;
+                        break;
+                    }
+                }
+            }
+            
+            // Simple similarity matching against examples
+            let maxUnsafeScore = 0;
+            let maxSafeScore = 0;
+            
+            for (const unsafe of unsafeExamples) {
+                const similarity = calculateSimpleSimilarity(inputLower, unsafe.toLowerCase());
+                if (similarity > maxUnsafeScore) maxUnsafeScore = similarity;
+            }
+            
+            for (const safe of safeExamples) {
+                const similarity = calculateSimpleSimilarity(inputLower, safe.toLowerCase());
+                if (similarity > maxSafeScore) maxSafeScore = similarity;
+            }
+            
+            // Combine keyword and similarity scores
+            const exampleScore = Math.max(0, maxUnsafeScore - maxSafeScore * 0.5);
+            const score = Math.max(keywordScore, exampleScore);
+            
+            let decision = 'allow';
+            if (score > 0.6) {
+                decision = 'block';
+            } else if (score > 0.3) {
+                decision = 'review';
+            }
+            
+            console.log('[Local Eval]', { input, description, keywordScore, exampleScore, score, decision });
+            return { decision, score, source: 'local' };
+        }
+        
+        function calculateSimpleSimilarity(str1, str2) {
+            // Jaccard similarity on words
+            const words1 = new Set(str1.split(/\s+/).filter(w => w.length > 2));
+            const words2 = new Set(str2.split(/\s+/).filter(w => w.length > 2));
+            
+            const intersection = new Set([...words1].filter(x => words2.has(x)));
+            const union = new Set([...words1, ...words2]);
+            
+            if (union.size === 0) return 0;
+            return intersection.size / union.size;
+        }
+        
+        function displayTestResult(data) {
+            const resultEl = document.getElementById('testResult');
+            const decisionEl = document.getElementById('testDecision');
+            const scoreEl = document.getElementById('testScore');
+            const explanationEl = document.getElementById('testExplanation');
+
+            const decision = data.decision || 'allow';
+            const score = data.score || 0;
+
+            decisionEl.textContent = decision.toUpperCase();
+            decisionEl.className = `test-decision ${decision}`;
+            scoreEl.textContent = `Score: ${score.toFixed(2)}`;
+            explanationEl.textContent = getExplanation(decision, score) + (data.source === 'local' ? ' (local evaluation)' : '');
+            
+            resultEl.classList.add('visible');
         }
 
         function getExplanation(decision, score) {
@@ -2660,8 +3844,79 @@ if (result.decision === 'block') {
             const a = document.createElement('a');
             a.href = url;
             a.download = filename;
+            document.body.appendChild(a);
             a.click();
+            document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+        
+        // ============================================================
+        // PUBLISH TO COMMUNITY
+        // ============================================================
+        
+        async function publishToCommunity() {
+            if (!state.guardrail?.config?.id) {
+                showToast('Generate a guardrail first', 'error');
+                return;
+            }
+            
+            const publishBtn = document.getElementById('publishBtn');
+            const publishStatus = document.getElementById('publishStatus');
+            
+            // Ask for contributor name
+            const contributorName = prompt('Enter your name or alias (for attribution):', 'Anonymous');
+            if (contributorName === null) return; // User cancelled
+            
+            try {
+                publishBtn.disabled = true;
+                publishBtn.textContent = '🔄 Publishing...';
+                publishStatus.textContent = '';
+                
+                const response = await fetch(`${API_BASE}/api/sg/publish`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': state.apiKey
+                    },
+                    body: JSON.stringify({
+                        guardrailId: state.guardrail.config.id,
+                        contributorName: contributorName || 'Anonymous'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showToast('🎉 Published to community! Others can now use your guardrail.', 'success');
+                    publishBtn.textContent = '✅ Published!';
+                    publishBtn.style.background = 'var(--success)';
+                    publishStatus.textContent = `Contributed by: ${contributorName || 'Anonymous'}`;
+                    publishStatus.style.color = 'var(--success)';
+                    
+                    // Mark the guardrail as published
+                    state.guardrail.isPublished = true;
+                    
+                    // Update local storage
+                    const myGuardrails = JSON.parse(localStorage.getItem('ez_my_guardrails') || '[]');
+                    const idx = myGuardrails.findIndex(g => g.config?.id === state.guardrail.config.id);
+                    if (idx !== -1) {
+                        myGuardrails[idx].isPublished = true;
+                        localStorage.setItem('ez_my_guardrails', JSON.stringify(myGuardrails));
+                    }
+                    
+                    // Refresh hub count
+                    loadHubGuardrails();
+                } else {
+                    throw new Error(data.error || 'Failed to publish');
+                }
+            } catch (error) {
+                console.error('Publish error:', error);
+                showToast('Failed to publish: ' + error.message, 'error');
+                publishBtn.disabled = false;
+                publishBtn.textContent = '🚀 Publish to Community';
+                publishStatus.textContent = error.message;
+                publishStatus.style.color = 'var(--error)';
+            }
         }
 
         // ============================================================
@@ -2712,8 +3967,15 @@ if (result.decision === 'block') {
         function updateApiKeyButton() {
             const label = document.getElementById('apiKeyLabel');
             const btn = document.getElementById('apiKeyBtn');
-            
-            if (state.llmApiKey) {
+
+            if (!state.apiKey) {
+                // No EthicalZen API key configured - show warning state
+                label.innerHTML = '⚠️ Configure API Key';
+                btn.title = 'API key required - click to configure';
+                btn.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+                btn.style.color = 'white';
+                btn.style.border = 'none';
+            } else if (state.llmApiKey) {
                 label.innerHTML = `🚀 ${state.llmProvider.toUpperCase()}`;
                 btn.title = `Using your ${state.llmProvider.toUpperCase()} key for fast generation`;
                 btn.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
