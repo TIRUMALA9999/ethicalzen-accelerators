@@ -1,0 +1,36 @@
+# ============================================================================
+# EthicalZen Demo — Minimal Gateway + Sidecar (Docker Compose)
+# Usage: docker compose -f deploy/docker-compose.demo.yml up -d
+# ============================================================================
+version: "3.8"
+
+services:
+  ethicalzen-gateway:
+    image: gcr.io/ethicalzen-public-04085/ethicalzen-gateway:latest
+    container_name: ethicalzen-gateway-demo
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"      # Go gateway
+      - "${SG_PORT:-3001}:3001"            # Smart Guardrail Engine (sidecar)
+      - "${METRICS_PORT:-9090}:9090"       # Prometheus metrics
+    environment:
+      - SMART_GUARDRAIL_URL=http://localhost:3001
+      - SG_ENGINE_URL=http://localhost:3001
+      - GUARDRAILS_PATH=/app/guardrails
+      - PORTAL_BACKEND_URL=${ETHICALZEN_BACKEND_URL:-https://api.ethicalzen.ai}
+      - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY:-}
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 4G
+        reservations:
+          cpus: "1"
+          memory: 2G
