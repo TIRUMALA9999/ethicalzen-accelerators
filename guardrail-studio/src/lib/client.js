@@ -120,7 +120,7 @@ export class EthicalZen {
         const options = {
             method,
             headers: {
-                'Authorization': `Bearer ${this.apiKey}`,
+                'X-API-Key': this.apiKey,
                 'Content-Type': 'application/json',
                 'User-Agent': 'ethicalzen-sdk/1.0.0'
             }

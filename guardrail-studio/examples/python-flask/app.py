@@ -17,7 +17,7 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 # EthicalZen API configuration
-ETHICALZEN_API_URL = "https://api.ethicalzen.ai/v1/evaluate"
+ETHICALZEN_API_URL = "https://api.ethicalzen.ai/api/sg/evaluate"
 ETHICALZEN_API_KEY = os.environ.get("ETHICALZEN_API_KEY", "")
 
 
@@ -26,7 +26,7 @@ def evaluate_guardrail(guardrail: str, input_text: str) -> dict:
     response = requests.post(
         ETHICALZEN_API_URL,
         headers={
-            "Authorization": f"Bearer {ETHICALZEN_API_KEY}",
+            "X-API-Key": ETHICALZEN_API_KEY,
             "Content-Type": "application/json"
         },
         json={

@@ -16,13 +16,13 @@ from langchain.schema import BaseMessage, HumanMessage, AIMessage
 from langchain.callbacks.manager import CallbackManagerForChainRun
 from langchain.chains.base import Chain
 
-ETHICALZEN_API_URL = "https://api.ethicalzen.ai/v1/evaluate"
+ETHICALZEN_API_URL = "https://api.ethicalzen.ai/api/sg/evaluate"
 ETHICALZEN_API_KEY = os.environ.get("ETHICALZEN_API_KEY", "")
 
 
 class EthicalZenGuardrail:
     """EthicalZen guardrail wrapper for LangChain."""
-    
+
     def __init__(
         self,
         guardrails: List[str],
@@ -32,18 +32,18 @@ class EthicalZenGuardrail:
         self.guardrails = guardrails
         self.api_key = api_key or ETHICALZEN_API_KEY
         self.fail_action = fail_action
-    
+
     def evaluate(self, text: str) -> dict:
         """Evaluate text against all configured guardrails."""
         results = []
         blocked = False
-        
+
         for guardrail in self.guardrails:
             try:
                 response = requests.post(
                     ETHICALZEN_API_URL,
                     headers={
-                        "Authorization": f"Bearer {self.api_key}",
+                        "X-API-Key": self.api_key,
                         "Content-Type": "application/json"
                     },
                     json={"guardrail": guardrail, "input": text}

@@ -12,7 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-const ETHICALZEN_API_URL = 'https://api.ethicalzen.ai/v1/evaluate';
+const ETHICALZEN_API_URL = 'https://api.ethicalzen.ai/api/sg/evaluate';
 
 interface GuardrailResult {
   decision: 'allow' | 'block' | 'review';
@@ -28,7 +28,7 @@ async function evaluateGuardrail(
   const response = await fetch(ETHICALZEN_API_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
+      'X-API-Key': apiKey,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ guardrail, input }),

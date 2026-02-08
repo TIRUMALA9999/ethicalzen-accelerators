@@ -16,10 +16,10 @@ const express = require('express');
 const EthicalZen = {
   evaluate: async ({ guardrail, input }) => {
     // This is a mock - replace with actual SDK call
-    const response = await fetch('https://api.ethicalzen.ai/v1/evaluate', {
+    const response = await fetch('https://api.ethicalzen.ai/api/sg/evaluate', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.ETHICALZEN_API_KEY}`,
+        'X-API-Key': process.env.ETHICALZEN_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ guardrail, input })
