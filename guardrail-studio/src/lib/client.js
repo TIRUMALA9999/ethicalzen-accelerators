@@ -14,7 +14,7 @@
  * ```
  */
 
-const DEFAULT_API_BASE = 'https://api.ethicalzen.ai/v1';
+const DEFAULT_API_BASE = 'https://api.ethicalzen.ai';
 
 /**
  * EthicalZen API Client
@@ -41,7 +41,7 @@ export class EthicalZen {
      * @returns {Promise<EvaluationResult>} The evaluation result
      */
     async evaluate(guardrailId, input) {
-        const response = await this._request('POST', '/evaluate', {
+        const response = await this._request('POST', '/api/sg/evaluate', {
             guardrail: guardrailId,
             input
         });
@@ -57,7 +57,7 @@ export class EthicalZen {
      * @returns {Promise<GuardrailConfig>} The generated guardrail configuration
      */
     async design({ description, safeExamples = [], unsafeExamples = [] }) {
-        const response = await this._request('POST', '/guardrails/design', {
+        const response = await this._request('POST', '/api/sg/design', {
             naturalLanguage: description,
             safeExamples,
             unsafeExamples
@@ -66,11 +66,21 @@ export class EthicalZen {
     }
 
     /**
+     * Create a new guardrail
+     * @param {Object} guardrail - The guardrail configuration
+     * @returns {Promise<Guardrail>} The created guardrail
+     */
+    async createGuardrail(guardrail) {
+        const response = await this._request('POST', '/api/guardrails/add', guardrail);
+        return response;
+    }
+
+    /**
      * List available guardrails
      * @returns {Promise<Guardrail[]>} List of available guardrails
      */
     async listGuardrails() {
-        const response = await this._request('GET', '/guardrails');
+        const response = await this._request('GET', '/api/guardrails/query');
         return response.guardrails || [];
     }
 
@@ -80,7 +90,7 @@ export class EthicalZen {
      * @returns {Promise<Guardrail>} The guardrail details
      */
     async getGuardrail(guardrailId) {
-        const response = await this._request('GET', `/guardrails/${guardrailId}`);
+        const response = await this._request('GET', `/api/guardrails/${guardrailId}`);
         return response;
     }
 
@@ -93,7 +103,7 @@ export class EthicalZen {
      * @returns {Promise<TestResult>} Test results with accuracy metrics
      */
     async test(guardrailId, { safeInputs = [], unsafeInputs = [] }) {
-        const response = await this._request('POST', `/guardrails/${guardrailId}/test`, {
+        const response = await this._request('POST', `/api/guardrails/${guardrailId}/test`, {
             safeInputs,
             unsafeInputs
         });
@@ -107,7 +117,7 @@ export class EthicalZen {
      * @returns {Promise<string>} The exported configuration
      */
     async export(guardrailId, format = 'yaml') {
-        const response = await this._request('GET', `/guardrails/${guardrailId}/export?format=${format}`);
+        const response = await this._request('GET', `/api/guardrails/${guardrailId}/export?format=${format}`);
         return response;
     }
 
