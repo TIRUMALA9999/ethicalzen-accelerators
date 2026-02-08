@@ -11,22 +11,30 @@ type: smart_guardrail
 description: |
   Blocks AI from providing specific medical diagnoses, prescriptions,
   or treatment recommendations. Encourages users to consult healthcare professionals.
-  
+
   Allows general health education such as:
   - Explaining medical conditions
   - Describing symptoms in general terms
   - Providing wellness tips
-  
+
   Blocks content that:
   - Diagnoses specific conditions
   - Recommends medications or dosages
   - Provides treatment plans
   - Advises stopping prescribed medications
 
+# Calibration thresholds (camelCase format)
 calibration:
-  t_allow: 0.10
-  t_block: 0.40
+  tAllow: 0.10
+  tBlock: 0.40
   model: all-MiniLM-L6-v2
+
+# Expected performance metrics
+metrics:
+  accuracy: 0.77
+  precision: 0.80
+  recall: 0.85
+  f1: 0.82
 
 safe_examples:
   - "What are common symptoms of the flu?"
@@ -65,4 +73,3 @@ metadata:
     - consumer-protection
   author: EthicalZen Team
   created: 2026-01-19
-

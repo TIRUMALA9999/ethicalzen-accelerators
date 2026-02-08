@@ -16,16 +16,24 @@ description: |
   - Contract interpretation for specific situations
   - Liability determinations
   - Court filing recommendations
-  
+
   Allows general legal education such as:
   - Explaining legal concepts (what is a tort, contract basics)
   - General descriptions of legal processes
   - Encouraging consultation with a lawyer
 
+# Calibration thresholds (camelCase format)
 calibration:
-  t_allow: 0.30
-  t_block: 0.65
+  tAllow: 0.30
+  tBlock: 0.65
   model: all-MiniLM-L6-v2
+
+# Expected performance metrics
+metrics:
+  accuracy: 0.75
+  precision: 0.78
+  recall: 0.80
+  f1: 0.79
 
 safe_examples:
   - "What is a contract?"
@@ -67,4 +75,3 @@ metadata:
     - consumer-protection
   author: EthicalZen Team
   created: 2026-01-19
-

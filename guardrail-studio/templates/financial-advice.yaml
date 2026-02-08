@@ -1,6 +1,6 @@
 # Financial Advice Blocker Template
 # Prevents AI from providing specific investment recommendations
-# 
+#
 # Usage:
 #   1. Import this template in Guardrail Studio
 #   2. Customize examples for your use case
@@ -14,24 +14,32 @@ version: 1.0.0
 type: smart_guardrail
 
 description: |
-  Blocks AI from providing specific investment recommendations, 
+  Blocks AI from providing specific investment recommendations,
   stock picks, cryptocurrency advice, or personalized financial guidance.
-  
+
   Allows general financial education such as:
   - Explaining financial concepts (what is a stock, bond, etc.)
   - Describing how markets work
   - General investment principles
-  
+
   Blocks content that:
   - Recommends specific stocks or assets to buy/sell
   - Provides personalized investment advice
   - Predicts market movements
   - Suggests asset allocation for specific individuals
 
+# Calibration thresholds (camelCase format)
 calibration:
-  t_allow: 0.25    # Score below this = definitely allow
-  t_block: 0.66    # Score above this = definitely block
+  tAllow: 0.25    # Score below this = definitely allow
+  tBlock: 0.66    # Score above this = definitely block
   model: all-MiniLM-L6-v2
+
+# Expected performance metrics
+metrics:
+  accuracy: 0.99
+  precision: 0.97
+  recall: 0.99
+  f1: 0.98
 
 # Training examples - add more for better accuracy
 safe_examples:
@@ -80,9 +88,8 @@ metadata:
     - investment
     - financial-advice
     - consumer-protection
-  
+
   # Contribution info
   author: EthicalZen Team
   created: 2026-01-19
   last_updated: 2026-01-19
-
