@@ -1,0 +1,80 @@
+<div class="page-header">
+  <h1>Evidence Trail</h1>
+  <p>Searchable audit log of all guardrail evaluations</p>
+</div>
+
+<!-- Search + Filters -->
+<div class="card" style="margin-bottom:16px;padding:12px 16px">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <input id="e-search" type="text" placeholder="Search trace ID, contract, type..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary)">
+    <select id="e-status" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary)">
+      <option value="">All Statuses</option>
+      <option value="blocked">Blocked</option>
+      <option value="allowed">Allowed</option>
+    </select>
+    <button class="btn btn-sm btn-primary" onclick="loadEvidence()">Search</button>
+  </div>
+</div>
+
+<!-- Evidence Table -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title" id="e-count">Evidence Records</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Trace ID</th>
+          <th>Contract</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Risk Score</th>
+          <th>Latency</th>
+        </tr>
+      </thead>
+      <tbody id="e-tbody">
+        <tr><td colspan="7" class="empty-state" style="padding:40px">Loading evidence...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function init_evidence() {
+  await loadEvidence();
+}
+
+async function loadEvidence() {
+  try {
+    const search = document.getElementById('e-search')?.value || '';
+    const status = document.getElementById('e-status')?.value || '';
+    const data = await API.evidence({ limit: 200, search, status });
+    const records = Array.isArray(data) ? data : (data.evidence || data.data || []);
+
+    document.getElementById('e-count').textContent = `Evidence Records (${records.length})`;
+
+    const tbody = document.getElementById('e-tbody');
+    if (!records.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:40px">No evidence records found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = records.map(e => `
+      <tr>
+        <td class="mono">${Utils.formatDate(e.timestamp)}</td>
+        <td class="mono">${Utils.truncate(e.trace_id || e.id || '-', 20)}</td>
+        <td class="mono">${Utils.truncate(e.contract_id || '-', 20)}</td>
+        <td>${e.request_type || e.violation_type || '-'}</td>
+        <td>${Utils.statusBadge(e.status)}</td>
+        <td>${Utils.scoreBar(parseFloat(e.risk_score) || 0)}</td>
+        <td class="mono">${e.latency_ms || '-'}ms</td>
+      </tr>
+    `).join('');
+  } catch (err) {
+    document.getElementById('e-tbody').innerHTML =
+      `<tr><td colspan="7" class="empty-state" style="padding:40px">Error: ${err.message}</td></tr>`;
+  }
+}
+</script>

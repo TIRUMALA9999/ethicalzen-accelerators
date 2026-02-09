@@ -1,0 +1,124 @@
+<div class="page-header">
+  <h1>Executive Dashboard</h1>
+  <p>Real-time AI safety governance overview across all frameworks</p>
+</div>
+
+<!-- KPI Row -->
+<div class="kpi-grid" id="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Overall Risk Score</div>
+    <div class="kpi-value" id="kpi-risk" style="color:var(--risk-low)">--</div>
+    <div class="kpi-trend" id="kpi-risk-zone">Loading...</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Violations (24h)</div>
+    <div class="kpi-value" id="kpi-violations">--</div>
+    <div class="kpi-trend" id="kpi-block-rate">--</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Compliance Coverage</div>
+    <div class="kpi-value" id="kpi-coverage">--</div>
+    <div class="kpi-trend">Across 3 frameworks</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Drift Alerts</div>
+    <div class="kpi-value" id="kpi-drift">--</div>
+    <div class="kpi-trend" id="kpi-drift-status">--</div>
+  </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid-2" style="margin-bottom:24px">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Violation Timeline (7 days)</span>
+    </div>
+    <canvas id="chart-timeline" style="width:100%;height:200px"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Risk Gauge</span>
+    </div>
+    <canvas id="chart-gauge" style="width:100%;height:200px"></canvas>
+  </div>
+</div>
+
+<!-- Recent Violations + Quick Actions -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Recent Violations</span>
+      <a href="#violations" class="btn btn-sm btn-secondary">View All</a>
+    </div>
+    <table class="data-table">
+      <thead>
+        <tr><th>Time</th><th>Type</th><th>Status</th><th>Score</th></tr>
+      </thead>
+      <tbody id="recent-violations">
+        <tr><td colspan="4" class="empty-state" style="padding:30px">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Quick Actions</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding:8px 0">
+      <a href="#exports" class="btn btn-primary" style="justify-content:center">Generate OSCAL Report</a>
+      <a href="#exports" class="btn btn-secondary" style="justify-content:center">Export STIX Bundle</a>
+      <a href="#evidence" class="btn btn-secondary" style="justify-content:center">View Audit Trail</a>
+      <a href="#compliance" class="btn btn-secondary" style="justify-content:center">Compliance Matrix</a>
+      <a href="#drift" class="btn btn-secondary" style="justify-content:center">Check Drift Status</a>
+    </div>
+  </div>
+</div>
+
+<script>
+async function init_dashboard() {
+  try {
+    // Load risk data
+    const risk = await API.risk();
+    document.getElementById('kpi-risk').textContent = risk.overall;
+    document.getElementById('kpi-risk').style.color = Utils.riskColor(risk.overall);
+    document.getElementById('kpi-risk-zone').textContent = `${risk.zone.toUpperCase()} risk zone`;
+    document.getElementById('kpi-violations').textContent = risk.violations24h || 0;
+    document.getElementById('kpi-block-rate').textContent = `${risk.blockRate}% block rate`;
+    document.getElementById('kpi-drift').textContent = risk.activeDriftAlerts || 0;
+    document.getElementById('kpi-drift-status').textContent = risk.activeDriftAlerts > 0 ? 'Action needed' : 'All clear';
+
+    // Risk gauge
+    Charts.gauge('chart-gauge', risk.overall);
+
+    // Load recent violations
+    const vData = await API.violations({ limit: 10 });
+    const violations = Array.isArray(vData) ? vData : (vData.violations || vData.data || []);
+    const tbody = document.getElementById('recent-violations');
+    if (violations.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="padding:30px">No violations in the last 24 hours</td></tr>';
+    } else {
+      tbody.innerHTML = violations.slice(0, 10).map(v => `
+        <tr>
+          <td class="mono">${Utils.timeAgo(v.timestamp)}</td>
+          <td>${Utils.truncate(v.violation_type || v.guardrail_id || '-', 25)}</td>
+          <td>${Utils.statusBadge(v.status)}</td>
+          <td>${Utils.scoreBar(v.risk_score || 0)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Timeline chart
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000);
+      const dayViolations = violations.filter(v => {
+        const vd = new Date(v.timestamp);
+        return vd.toDateString() === d.toDateString();
+      });
+      days.push({ label: Utils.formatDateShort(d.toISOString()), value: dayViolations.length, color: '#6366f1' });
+    }
+    Charts.barChart('chart-timeline', days);
+  } catch (err) {
+    console.error('Dashboard load error:', err);
+  }
+}
+</script>

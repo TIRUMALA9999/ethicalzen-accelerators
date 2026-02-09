@@ -1,0 +1,120 @@
+<div class="page-header">
+  <h1>Drift Detection</h1>
+  <p>Monitor guardrail performance drift and anomalies</p>
+</div>
+
+<!-- Alert Banner -->
+<div id="drift-banner" style="display:none;margin-bottom:20px;padding:16px 20px;border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:space-between">
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:20px">&#9888;</span>
+    <div>
+      <div style="font-weight:600" id="drift-banner-title">Active Drift Alerts</div>
+      <div style="font-size:12px;opacity:0.8" id="drift-banner-desc">Action required</div>
+    </div>
+  </div>
+</div>
+
+<!-- Drift Cards -->
+<div id="drift-cards" class="kpi-grid" style="margin-bottom:24px">
+  <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">
+    <div class="loading-spinner"></div>
+    <p style="margin-top:12px">Loading drift status...</p>
+  </div>
+</div>
+
+<!-- Drift History -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Drift History</span>
+    <button class="btn btn-sm btn-secondary" onclick="loadDrift()">Refresh</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Detected</th>
+          <th>Guardrail</th>
+          <th>Alert Type</th>
+          <th>Severity</th>
+          <th>Current</th>
+          <th>Baseline</th>
+          <th>Delta</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="drift-tbody">
+        <tr><td colspan="8" class="empty-state" style="padding:40px">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+async function init_drift() {
+  await loadDrift();
+}
+
+async function loadDrift() {
+  try {
+    const data = await API.driftStatus();
+    const alerts = Array.isArray(data) ? data : (data.alerts || data.data || []);
+    const active = alerts.filter(a => a.status === 'active');
+
+    // Banner
+    const banner = document.getElementById('drift-banner');
+    if (active.length > 0) {
+      banner.style.display = 'flex';
+      banner.style.background = 'rgba(239, 68, 68, 0.1)';
+      banner.style.border = '1px solid rgba(239, 68, 68, 0.2)';
+      document.getElementById('drift-banner-title').textContent = `${active.length} Active Drift Alert${active.length > 1 ? 's' : ''}`;
+    } else {
+      banner.style.display = 'flex';
+      banner.style.background = 'rgba(16, 185, 129, 0.1)';
+      banner.style.border = '1px solid rgba(16, 185, 129, 0.2)';
+      document.getElementById('drift-banner-title').textContent = 'No Active Drift Alerts';
+      document.getElementById('drift-banner-desc').textContent = 'All guardrails operating within baseline';
+    }
+
+    // Cards
+    const cardsEl = document.getElementById('drift-cards');
+    if (alerts.length === 0) {
+      cardsEl.innerHTML = `
+        <div class="kpi-card"><div class="kpi-label">Block Rate Drift</div><div class="kpi-value" style="color:var(--success)">0</div><div class="kpi-trend">Stable</div></div>
+        <div class="kpi-card"><div class="kpi-label">Confidence Drift</div><div class="kpi-value" style="color:var(--success)">0</div><div class="kpi-trend">Stable</div></div>
+        <div class="kpi-card"><div class="kpi-label">Latency Drift</div><div class="kpi-value" style="color:var(--success)">0</div><div class="kpi-trend">Stable</div></div>
+      `;
+    } else {
+      const types = { block_rate_drift: 0, confidence_drift: 0, latency_drift: 0 };
+      active.forEach(a => { if (types[a.alert_type] !== undefined) types[a.alert_type]++; });
+      cardsEl.innerHTML = Object.entries(types).map(([type, count]) => `
+        <div class="kpi-card">
+          <div class="kpi-label">${type.replace(/_/g, ' ')}</div>
+          <div class="kpi-value" style="color:${count > 0 ? 'var(--error)' : 'var(--success)'}">${count}</div>
+          <div class="kpi-trend">${count > 0 ? 'Action needed' : 'Stable'}</div>
+        </div>
+      `).join('');
+    }
+
+    // History table
+    const tbody = document.getElementById('drift-tbody');
+    if (alerts.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="empty-state" style="padding:40px">No drift events detected. All guardrails operating normally.</td></tr>';
+    } else {
+      tbody.innerHTML = alerts.map(a => `
+        <tr>
+          <td class="mono">${Utils.formatDate(a.detected_at || a.created_at)}</td>
+          <td>${a.guardrail_id || '-'}</td>
+          <td>${(a.alert_type || '').replace(/_/g, ' ')}</td>
+          <td><span class="badge badge-risk-${a.severity || 'moderate'}">${a.severity || 'medium'}</span></td>
+          <td class="mono">${a.current_value || '-'}</td>
+          <td class="mono">${a.baseline_value || '-'}</td>
+          <td class="mono" style="color:${parseFloat(a.delta) > 0 ? 'var(--error)' : 'var(--success)'}">${a.delta || '-'}</td>
+          <td>${a.status === 'active' ? '<span class="badge badge-blocked">Active</span>' : '<span class="badge badge-allowed">Resolved</span>'}</td>
+        </tr>
+      `).join('');
+    }
+  } catch (err) {
+    document.getElementById('drift-cards').innerHTML = `<div style="grid-column:1/-1" class="empty-state"><p>Error: ${err.message}</p></div>`;
+  }
+}
+</script>

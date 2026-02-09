@@ -1,0 +1,87 @@
+<div class="page-header">
+  <h1>Risk Overview</h1>
+  <p>Aggregated AI safety risk scoring across all guardrails and frameworks</p>
+</div>
+
+<!-- Risk Gauge -->
+<div class="card" style="margin-bottom:24px;text-align:center;padding:30px">
+  <canvas id="risk-gauge" style="width:300px;height:160px;margin:0 auto"></canvas>
+  <div id="risk-zone-label" style="margin-top:12px;font-size:14px;font-weight:600;text-transform:uppercase">Loading...</div>
+  <div id="risk-computed" style="font-size:12px;color:var(--text-muted);margin-top:4px"></div>
+</div>
+
+<!-- Framework Risk Cards -->
+<div class="grid-3" style="margin-bottom:24px">
+  <div class="card" id="fw-nist-ai">
+    <div class="card-title">NIST AI RMF</div>
+    <div class="kpi-value" id="fw-nist-ai-score" style="margin:12px 0">--</div>
+    <div style="font-size:12px;color:var(--text-muted)" id="fw-nist-ai-zone">--</div>
+  </div>
+  <div class="card" id="fw-iso">
+    <div class="card-title">ISO 42001</div>
+    <div class="kpi-value" id="fw-iso-score" style="margin:12px 0">--</div>
+    <div style="font-size:12px;color:var(--text-muted)" id="fw-iso-zone">--</div>
+  </div>
+  <div class="card" id="fw-csf">
+    <div class="card-title">NIST CSF 2.0</div>
+    <div class="kpi-value" id="fw-csf-score" style="margin:12px 0">--</div>
+    <div style="font-size:12px;color:var(--text-muted)" id="fw-csf-zone">--</div>
+  </div>
+</div>
+
+<!-- Risk Breakdown -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Risk Breakdown</span>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Factor</th><th>Score</th><th>Weight</th></tr>
+    </thead>
+    <tbody id="risk-breakdown">
+      <tr><td colspan="3" class="empty-state" style="padding:30px">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+async function init_risk() {
+  try {
+    const risk = await API.risk();
+
+    Charts.gauge('risk-gauge', risk.overall);
+
+    const zoneLabel = document.getElementById('risk-zone-label');
+    zoneLabel.textContent = `${risk.zone} risk`;
+    zoneLabel.style.color = Utils.riskColor(risk.overall);
+
+    document.getElementById('risk-computed').textContent = `Computed ${Utils.formatDate(risk.computedAt)}`;
+
+    // Framework scores
+    if (risk.frameworks) {
+      for (const [key, fw] of Object.entries(risk.frameworks)) {
+        const prefix = key === 'nist_ai_rmf' ? 'fw-nist-ai' : key === 'iso_42001' ? 'fw-iso' : 'fw-csf';
+        const scoreEl = document.getElementById(`${prefix}-score`);
+        const zoneEl = document.getElementById(`${prefix}-zone`);
+        if (scoreEl) {
+          scoreEl.textContent = fw.score;
+          scoreEl.style.color = Utils.riskColor(fw.score);
+        }
+        if (zoneEl) zoneEl.textContent = `${fw.zone} risk zone`;
+      }
+    }
+
+    // Breakdown table
+    const tbody = document.getElementById('risk-breakdown');
+    const bd = risk.breakdown || {};
+    tbody.innerHTML = `
+      <tr><td>Violation Frequency</td><td><strong>${bd.violationFrequency || 0}</strong>/40</td><td>40%</td></tr>
+      <tr><td>Severity (Block Rate)</td><td><strong>${bd.severity || 0}</strong>/30</td><td>30%</td></tr>
+      <tr><td>Drift Indicators</td><td><strong>${bd.drift || 0}</strong>/30</td><td>30%</td></tr>
+      <tr style="font-weight:700;border-top:2px solid var(--border)"><td>Total</td><td>${risk.overall}/100</td><td>100%</td></tr>
+    `;
+  } catch (err) {
+    document.getElementById('risk-zone-label').textContent = 'Error loading risk data';
+  }
+}
+</script>

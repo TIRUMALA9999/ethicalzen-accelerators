@@ -1,0 +1,116 @@
+<div class="page-header">
+  <h1>TAXII Browser</h1>
+  <p>Browse the EthicalZen TAXII 2.1 threat intelligence server</p>
+</div>
+
+<!-- Discovery -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <span class="card-title">TAXII 2.1 Server Discovery</span>
+    <button class="btn btn-sm btn-primary" onclick="loadDiscovery()">Refresh</button>
+  </div>
+  <div id="taxii-discovery" style="font-size:13px;color:var(--text-secondary)">
+    <div class="loading-spinner"></div> Discovering...
+  </div>
+</div>
+
+<!-- Collections -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-header">
+    <span class="card-title">Collections</span>
+  </div>
+  <div id="taxii-collections">
+    <div class="empty-state" style="padding:30px">Loading collections...</div>
+  </div>
+</div>
+
+<!-- Objects -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title" id="taxii-objects-title">STIX Objects</span>
+  </div>
+  <div id="taxii-objects">
+    <div class="empty-state" style="padding:40px">
+      <div class="empty-state-icon">&#127760;</div>
+      <div class="empty-state-title">Select a collection to browse objects</div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function init_taxii() {
+  await loadDiscovery();
+  await loadCollections();
+}
+
+async function loadDiscovery() {
+  try {
+    const data = await API.taxiiDiscovery();
+    document.getElementById('taxii-discovery').innerHTML = `
+      <div style="display:grid;grid-template-columns:120px 1fr;gap:8px">
+        <strong>Title:</strong><span>${data.title || 'EthicalZen TAXII Server'}</span>
+        <strong>Description:</strong><span>${data.description || '-'}</span>
+        <strong>API Roots:</strong><span>${(data.api_roots || []).join(', ') || '-'}</span>
+        <strong>Version:</strong><span>TAXII 2.1</span>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById('taxii-discovery').innerHTML = `<span style="color:var(--error)">Discovery failed: ${err.message}</span>`;
+  }
+}
+
+async function loadCollections() {
+  try {
+    const data = await API.taxiiCollections();
+    const collections = data.collections || data || [];
+    if (!collections.length) {
+      document.getElementById('taxii-collections').innerHTML = '<div class="empty-state" style="padding:20px">No collections available</div>';
+      return;
+    }
+    document.getElementById('taxii-collections').innerHTML = collections.map(c => `
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background 0.15s"
+           onclick="loadObjects('${c.id}')"
+           onmouseover="this.style.background='var(--bg-tertiary)'"
+           onmouseout="this.style.background=''">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:600;font-size:14px">${c.title || c.id}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${c.description || ''}</div>
+          </div>
+          <span class="badge badge-info">${c.can_read ? 'Read' : ''} ${c.can_write ? 'Write' : ''}</span>
+        </div>
+        <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:4px">${c.id}</div>
+      </div>
+    `).join('');
+  } catch (err) {
+    document.getElementById('taxii-collections').innerHTML = `<div class="empty-state" style="padding:20px;color:var(--error)">${err.message}</div>`;
+  }
+}
+
+async function loadObjects(collectionId) {
+  document.getElementById('taxii-objects-title').textContent = `STIX Objects — ${collectionId}`;
+  document.getElementById('taxii-objects').innerHTML = '<div style="text-align:center;padding:20px"><div class="loading-spinner"></div></div>';
+
+  try {
+    const data = await API.taxiiObjects(collectionId);
+    const objects = data.objects || data || [];
+    if (!objects.length) {
+      document.getElementById('taxii-objects').innerHTML = '<div class="empty-state" style="padding:30px">No objects in this collection</div>';
+      return;
+    }
+
+    document.getElementById('taxii-objects').innerHTML = objects.map(obj => `
+      <details style="border-bottom:1px solid var(--border-light)">
+        <summary style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:12px">
+          <span class="badge badge-info">${obj.type || 'unknown'}</span>
+          <span style="font-weight:500;font-size:13px">${obj.name || obj.id}</span>
+          <span class="mono" style="font-size:11px;color:var(--text-muted);margin-left:auto">${Utils.formatDate(obj.created)}</span>
+        </summary>
+        <div class="json-preview" style="margin:0 16px 16px;font-size:11px">${Utils.syntaxHighlight(obj)}</div>
+      </details>
+    `).join('');
+  } catch (err) {
+    document.getElementById('taxii-objects').innerHTML = `<div class="empty-state" style="padding:20px;color:var(--error)">${err.message}</div>`;
+  }
+}
+</script>

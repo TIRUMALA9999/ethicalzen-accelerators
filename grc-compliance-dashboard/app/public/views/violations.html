@@ -1,0 +1,130 @@
+<div class="page-header">
+  <h1>Violation Monitoring</h1>
+  <p>Real-time guardrail violation feed with live updates</p>
+</div>
+
+<!-- Stats Row -->
+<div class="kpi-grid" style="margin-bottom:20px">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Violations</div>
+    <div class="kpi-value" id="v-total">--</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Block Rate</div>
+    <div class="kpi-value" id="v-block-rate">--</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Live Clients</div>
+    <div class="kpi-value" id="v-clients">--</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">SSE Status</div>
+    <div class="kpi-value" id="v-sse" style="font-size:18px;color:var(--warning)">Connecting...</div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card" style="margin-bottom:16px;padding:12px 16px">
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <select id="v-time-filter" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary)">
+      <option value="1h">Last 1 hour</option>
+      <option value="6h">Last 6 hours</option>
+      <option value="24h" selected>Last 24 hours</option>
+      <option value="7d">Last 7 days</option>
+    </select>
+    <select id="v-status-filter" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;background:var(--bg-primary);color:var(--text-primary)">
+      <option value="">All Statuses</option>
+      <option value="blocked">Blocked</option>
+      <option value="allowed">Allowed</option>
+    </select>
+    <button class="btn btn-sm btn-primary" onclick="loadViolations()">Refresh</button>
+  </div>
+</div>
+
+<!-- Live Feed -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title">Violation Feed</span>
+    <span class="badge badge-info" id="v-live-badge">LIVE</span>
+  </div>
+  <div id="violation-feed" style="max-height:600px;overflow-y:auto">
+    <div class="empty-state"><div class="loading-spinner"></div><p style="margin-top:12px">Loading violations...</p></div>
+  </div>
+</div>
+
+<script>
+let sseSource = null;
+
+async function init_violations() {
+  await loadViolations();
+  connectSSE();
+}
+
+async function loadViolations() {
+  try {
+    const data = await API.violations({ limit: 100 });
+    const violations = Array.isArray(data) ? data : (data.violations || data.data || []);
+    renderViolations(violations);
+    updateStats(violations);
+  } catch (err) {
+    document.getElementById('violation-feed').innerHTML =
+      `<div class="empty-state"><div class="empty-state-title">Failed to load violations</div><p>${err.message}</p></div>`;
+  }
+}
+
+function renderViolations(violations) {
+  const feed = document.getElementById('violation-feed');
+  if (!violations.length) {
+    feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128994;</div><div class="empty-state-title">No violations detected</div><p>All guardrails are operating normally</p></div>';
+    return;
+  }
+  feed.innerHTML = violations.map(v => `
+    <div class="violation-item">
+      <div style="flex:0 0 90px" class="mono">${Utils.timeAgo(v.timestamp)}</div>
+      <div style="flex:1">
+        <div style="font-weight:500;font-size:13px">${v.violation_type || v.guardrail_id || 'Unknown'}</div>
+        <div style="font-size:12px;color:var(--text-muted)">${v.contract_id || ''} ${v.trace_id ? '| ' + Utils.truncate(v.trace_id, 20) : ''}</div>
+      </div>
+      <div style="flex:0 0 80px">${Utils.statusBadge(v.status)}</div>
+      <div style="flex:0 0 80px">${Utils.scoreBar(v.risk_score || 0)}</div>
+      <div style="flex:0 0 60px;text-align:right" class="mono">${v.latency_ms || '-'}ms</div>
+    </div>
+  `).join('');
+}
+
+function updateStats(violations) {
+  document.getElementById('v-total').textContent = violations.length;
+  const blocked = violations.filter(v => v.status === 'blocked').length;
+  const rate = violations.length > 0 ? (blocked / violations.length * 100).toFixed(1) : '0.0';
+  document.getElementById('v-block-rate').textContent = rate + '%';
+}
+
+function connectSSE() {
+  if (sseSource) sseSource.close();
+  sseSource = API.connectViolationStream((event, data) => {
+    if (event === 'connected') {
+      document.getElementById('v-sse').textContent = 'Connected';
+      document.getElementById('v-sse').style.color = 'var(--success)';
+    }
+    if (event === 'violation') {
+      const feed = document.getElementById('violation-feed');
+      const item = document.createElement('div');
+      item.className = 'violation-item new';
+      item.innerHTML = `
+        <div style="flex:0 0 90px" class="mono">just now</div>
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:13px">${data.violation_type || data.guardrail_id || 'Unknown'}</div>
+          <div style="font-size:12px;color:var(--text-muted)">${data.contract_id || ''}</div>
+        </div>
+        <div style="flex:0 0 80px">${Utils.statusBadge(data.status)}</div>
+        <div style="flex:0 0 80px">${Utils.scoreBar(data.risk_score || 0)}</div>
+        <div style="flex:0 0 60px;text-align:right" class="mono">${data.latency_ms || '-'}ms</div>
+      `;
+      feed.prepend(item);
+    }
+    if (event === 'stats') {
+      document.getElementById('v-clients').textContent = data.totalClients || 1;
+    }
+  });
+}
+</script>

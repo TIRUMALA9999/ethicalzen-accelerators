@@ -1,0 +1,150 @@
+<div class="page-header">
+  <h1>Settings</h1>
+  <p>Configure your EthicalZen cloud connection and dashboard preferences</p>
+</div>
+
+<div class="grid-2">
+  <!-- Connection Settings -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Cloud Connection</span>
+      <div id="s-status" class="connection-badge offline">
+        <span class="connection-dot"></span>Not tested
+      </div>
+    </div>
+
+    <div class="input-group">
+      <label>API URL</label>
+      <input id="s-url" type="text" value="https://api.ethicalzen.ai" placeholder="https://api.ethicalzen.ai">
+    </div>
+
+    <div class="input-group">
+      <label>API Key</label>
+      <input id="s-key" type="password" placeholder="Enter your EthicalZen API key">
+    </div>
+
+    <div class="input-group">
+      <label>Tenant ID</label>
+      <input id="s-tenant" type="text" value="demo" placeholder="demo">
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" onclick="testConnection()">Test Connection</button>
+      <button class="btn btn-success" onclick="saveSettings()">Save</button>
+    </div>
+
+    <div id="s-result" style="margin-top:16px;font-size:13px"></div>
+  </div>
+
+  <!-- Cache & Preferences -->
+  <div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Cache Management</span>
+      </div>
+
+      <div id="s-cache-stats" style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">Loading...</div>
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-secondary" onclick="clearCache()">Clear Cache</button>
+        <button class="btn btn-primary" onclick="seedDemo()">Load Demo Data</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Display</span>
+      </div>
+
+      <div class="input-group">
+        <label>Theme</label>
+        <select id="s-theme" onchange="Theme.set(this.value)">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function init_settings() {
+  // Load current theme
+  const theme = document.documentElement.getAttribute('data-theme');
+  document.getElementById('s-theme').value = theme;
+
+  // Load cache stats
+  await loadCacheStats();
+}
+
+async function testConnection() {
+  const resultEl = document.getElementById('s-result');
+  const statusEl = document.getElementById('s-status');
+  resultEl.innerHTML = '<div class="loading-spinner" style="display:inline-block"></div> Testing...';
+
+  try {
+    const url = document.getElementById('s-url').value;
+    const key = document.getElementById('s-key').value;
+    const tenant = document.getElementById('s-tenant').value;
+
+    // Save first
+    if (key) {
+      await API.post('/settings', { apiUrl: url, apiKey: key, tenantId: tenant });
+    }
+
+    const health = await API.health();
+    if (health.cloud?.connected) {
+      statusEl.className = 'connection-badge live';
+      statusEl.innerHTML = '<span class="connection-dot"></span>Connected';
+      resultEl.innerHTML = `<span style="color:var(--success)">Connected successfully (${health.cloud.latencyMs}ms)</span>`;
+      Utils.toast('Connection successful', 'success');
+    } else {
+      statusEl.className = 'connection-badge offline';
+      statusEl.innerHTML = '<span class="connection-dot"></span>Failed';
+      resultEl.innerHTML = `<span style="color:var(--error)">Connection failed: ${health.cloud?.error || 'Unknown error'}</span>`;
+    }
+  } catch (err) {
+    resultEl.innerHTML = `<span style="color:var(--error)">Error: ${err.message}</span>`;
+  }
+}
+
+async function saveSettings() {
+  try {
+    await API.post('/settings', {
+      apiUrl: document.getElementById('s-url').value,
+      apiKey: document.getElementById('s-key').value,
+      tenantId: document.getElementById('s-tenant').value
+    });
+    Utils.toast('Settings saved', 'success');
+  } catch (err) {
+    Utils.toast('Failed to save: ' + err.message, 'error');
+  }
+}
+
+async function loadCacheStats() {
+  try {
+    const stats = await API.cacheStatus();
+    document.getElementById('s-cache-stats').innerHTML = stats.enabled
+      ? `Violations: ${stats.violations} | Evidence: ${stats.evidence} | Exports: ${stats.exports}`
+      : 'Cache disabled (better-sqlite3 not available)';
+  } catch {
+    document.getElementById('s-cache-stats').textContent = 'Unable to fetch cache stats';
+  }
+}
+
+async function clearCache() {
+  await API.cacheClear();
+  Utils.toast('Cache cleared', 'success');
+  loadCacheStats();
+}
+
+async function seedDemo() {
+  try {
+    const result = await API.cacheSeedDemo();
+    Utils.toast(`Demo data loaded: ${result.violations} violations, ${result.evidence} evidence records`, 'success');
+    loadCacheStats();
+  } catch (err) {
+    Utils.toast('Failed: ' + err.message, 'error');
+  }
+}
+</script>

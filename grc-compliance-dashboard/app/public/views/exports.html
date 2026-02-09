@@ -1,0 +1,146 @@
+<div class="page-header">
+  <h1>Export Builder</h1>
+  <p>Generate OSCAL 1.1.2 and STIX 2.1 compliance reports from your guardrail data</p>
+</div>
+
+<div class="grid-2">
+  <!-- Left: Configuration -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Export Configuration</span>
+    </div>
+
+    <div class="input-group">
+      <label>Format</label>
+      <select id="ex-format">
+        <option value="oscal">OSCAL 1.1.2 (Assessment Results)</option>
+        <option value="stix">STIX 2.1 (Threat Intelligence Bundle)</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>Compliance Framework</label>
+      <select id="ex-framework">
+        <option value="">All Frameworks</option>
+        <option value="nist_ai_rmf">NIST AI Risk Management Framework</option>
+        <option value="iso_42001">ISO/IEC 42001 AI Management System</option>
+        <option value="nist_csf">NIST Cybersecurity Framework 2.0</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label>Organization Name</label>
+      <input id="ex-org" type="text" value="My Organization" placeholder="Organization name">
+    </div>
+
+    <div class="input-group">
+      <label>Title (optional)</label>
+      <input id="ex-title" type="text" placeholder="Custom report title">
+    </div>
+
+    <div id="oscal-options">
+      <div class="input-group">
+        <label><input type="checkbox" id="ex-backmatter" checked> Include Back Matter</label>
+      </div>
+    </div>
+
+    <div id="stix-options" style="display:none">
+      <div class="input-group">
+        <label><input type="checkbox" id="ex-sightings" checked> Include Sightings</label>
+      </div>
+      <div class="input-group">
+        <label><input type="checkbox" id="ex-extension" checked> Include Extension Definition</label>
+      </div>
+      <div class="input-group">
+        <label><input type="checkbox" id="ex-identity" checked> Include Identity</label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px" onclick="generateExport()">
+      Generate Export
+    </button>
+  </div>
+
+  <!-- Right: Preview -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title" id="ex-preview-title">Export Preview</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-secondary" onclick="downloadExport()">Download JSON</button>
+        <button class="btn btn-sm btn-secondary" onclick="copyExport()">Copy</button>
+      </div>
+    </div>
+
+    <div id="ex-stats" style="margin-bottom:12px;font-size:12px;color:var(--text-muted)"></div>
+
+    <div id="ex-preview" class="json-preview" style="min-height:300px">
+      <div class="empty-state" style="padding:60px 20px">
+        <div class="empty-state-icon">&#128230;</div>
+        <div class="empty-state-title">Configure and generate an export</div>
+        <p>Select format and options, then click Generate Export</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentExportData = null;
+
+document.getElementById('ex-format')?.addEventListener('change', function() {
+  document.getElementById('oscal-options').style.display = this.value === 'oscal' ? '' : 'none';
+  document.getElementById('stix-options').style.display = this.value === 'stix' ? '' : 'none';
+});
+
+async function init_exports() {}
+
+async function generateExport() {
+  const format = document.getElementById('ex-format').value;
+  const preview = document.getElementById('ex-preview');
+  preview.innerHTML = '<div style="text-align:center;padding:40px"><div class="loading-spinner"></div><p style="margin-top:12px">Generating...</p></div>';
+
+  try {
+    const body = {
+      framework: document.getElementById('ex-framework').value || undefined,
+      organizationName: document.getElementById('ex-org').value || 'EthicalZen',
+      title: document.getElementById('ex-title').value || undefined
+    };
+
+    let data;
+    if (format === 'oscal') {
+      body.includeBackMatter = document.getElementById('ex-backmatter').checked;
+      data = await API.exportOscal(body);
+    } else {
+      body.includeSightings = document.getElementById('ex-sightings').checked;
+      body.includeExtensionDefinition = document.getElementById('ex-extension').checked;
+      body.includeIdentity = document.getElementById('ex-identity').checked;
+      data = await API.exportStix(body);
+    }
+
+    currentExportData = data;
+    document.getElementById('ex-preview-title').textContent = `${format.toUpperCase()} ${data.version || ''} Export`;
+    document.getElementById('ex-stats').textContent =
+      `${data.eventCount || 0} events | ${data.objectCount || '-'} objects | Generated ${Utils.formatDate(data.generatedAt)}`;
+
+    const doc = data.document || data.bundle || data;
+    preview.innerHTML = Utils.syntaxHighlight(doc);
+    Utils.toast(`${format.toUpperCase()} export generated`, 'success');
+  } catch (err) {
+    preview.innerHTML = `<div class="empty-state"><div class="empty-state-title">Export Failed</div><p>${err.message}</p></div>`;
+    Utils.toast('Export failed: ' + err.message, 'error');
+  }
+}
+
+function downloadExport() {
+  if (!currentExportData) return Utils.toast('Generate an export first', 'info');
+  const format = document.getElementById('ex-format').value;
+  const doc = currentExportData.document || currentExportData.bundle || currentExportData;
+  Utils.downloadJson(doc, `ethicalzen-${format}-export-${Date.now()}.json`);
+}
+
+function copyExport() {
+  if (!currentExportData) return Utils.toast('Generate an export first', 'info');
+  const doc = currentExportData.document || currentExportData.bundle || currentExportData;
+  navigator.clipboard.writeText(JSON.stringify(doc, null, 2));
+  Utils.toast('Copied to clipboard', 'success');
+}
+</script>

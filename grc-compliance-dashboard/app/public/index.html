@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EthicalZen GRC Compliance Dashboard</title>
+  <link rel="stylesheet" href="/css/variables.css">
+  <link rel="stylesheet" href="/css/layout.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/charts.css">
+  <style>
+    .json-key { color: #6366f1; }
+    .json-string { color: #10b981; }
+    .json-number { color: #f59e0b; }
+    .json-boolean { color: #3b82f6; }
+    .json-null { color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <a class="sidebar-logo" href="#">
+          <div class="sidebar-logo-icon">EZ</div>
+          <div>
+            <div class="sidebar-logo-text">EthicalZen</div>
+            <div class="sidebar-logo-sub">GRC Dashboard</div>
+          </div>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">
+          <div class="nav-section-title">Overview</div>
+          <a class="nav-item active" data-view="dashboard" href="#dashboard">
+            <span class="nav-icon">&#9632;</span> Dashboard
+          </a>
+          <a class="nav-item" data-view="risk" href="#risk">
+            <span class="nav-icon">&#9888;</span> Risk Overview
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Monitoring</div>
+          <a class="nav-item" data-view="violations" href="#violations">
+            <span class="nav-icon">&#128308;</span> Violations
+          </a>
+          <a class="nav-item" data-view="evidence" href="#evidence">
+            <span class="nav-icon">&#128196;</span> Evidence Trail
+          </a>
+          <a class="nav-item" data-view="drift" href="#drift">
+            <span class="nav-icon">&#128200;</span> Drift Alerts
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">Compliance</div>
+          <a class="nav-item" data-view="compliance" href="#compliance">
+            <span class="nav-icon">&#9989;</span> Framework Matrix
+          </a>
+          <a class="nav-item" data-view="exports" href="#exports">
+            <span class="nav-icon">&#128230;</span> Export Builder
+          </a>
+          <a class="nav-item" data-view="taxii" href="#taxii">
+            <span class="nav-icon">&#127760;</span> TAXII Browser
+          </a>
+        </div>
+        <div class="nav-section">
+          <div class="nav-section-title">System</div>
+          <a class="nav-item" data-view="settings" href="#settings">
+            <span class="nav-icon">&#9881;</span> Settings
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="header">
+        <div class="header-left">
+          <h2 id="header-title" class="header-title">Executive Dashboard</h2>
+        </div>
+        <div class="header-right">
+          <div id="connection-badge" class="connection-badge offline">
+            <span class="connection-dot"></span>Checking...
+          </div>
+          <button id="theme-toggle" class="theme-toggle" title="Toggle theme">&#9790;</button>
+        </div>
+      </header>
+
+      <div class="page-content">
+        <div id="view-container">
+          <!-- Views loaded dynamically here -->
+          <div class="empty-state">
+            <div class="loading-spinner"></div>
+            <p style="margin-top:16px">Loading...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="/js/theme.js"></script>
+  <script src="/js/utils.js"></script>
+  <script src="/js/api.js"></script>
+  <script src="/js/charts.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

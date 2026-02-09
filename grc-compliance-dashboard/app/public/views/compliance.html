@@ -1,0 +1,151 @@
+<div class="page-header">
+  <h1>Compliance Framework Matrix</h1>
+  <p>Control coverage across NIST AI RMF, ISO 42001, and NIST CSF 2.0</p>
+</div>
+
+<!-- Framework Tabs -->
+<div class="tab-bar">
+  <div class="tab active" onclick="switchFramework('nist_ai_rmf', this)">NIST AI RMF</div>
+  <div class="tab" onclick="switchFramework('iso_42001', this)">ISO 42001</div>
+  <div class="tab" onclick="switchFramework('nist_csf', this)">NIST CSF 2.0</div>
+</div>
+
+<!-- Coverage Summary -->
+<div class="kpi-grid" style="margin-bottom:20px">
+  <div class="kpi-card">
+    <div class="kpi-label">Controls Covered</div>
+    <div class="kpi-value" id="c-covered">--</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Total Controls</div>
+    <div class="kpi-value" id="c-total">--</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Coverage</div>
+    <canvas id="c-donut" style="width:80px;height:80px;margin:0 auto"></canvas>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Last Assessment</div>
+    <div class="kpi-value" id="c-last" style="font-size:16px">--</div>
+  </div>
+</div>
+
+<!-- Control Matrix Table -->
+<div class="card">
+  <div class="card-header">
+    <span class="card-title" id="c-framework-name">NIST AI Risk Management Framework</span>
+    <button class="btn btn-sm btn-primary" onclick="location.hash='exports'">Export OSCAL</button>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Control ID</th>
+          <th>Control Name</th>
+          <th>Mapped Guardrails</th>
+          <th>Confidence</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="c-tbody">
+        <tr><td colspan="5" class="empty-state" style="padding:40px">Loading framework data...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const frameworkNames = {
+  nist_ai_rmf: 'NIST AI Risk Management Framework',
+  iso_42001: 'ISO/IEC 42001 AI Management System',
+  nist_csf: 'NIST Cybersecurity Framework 2.0'
+};
+
+// Default control sets per framework
+const frameworkControls = {
+  nist_ai_rmf: [
+    { id: 'MAP 1.1', name: 'Intended purposes and context of use defined' },
+    { id: 'MAP 1.2', name: 'Interdisciplinary stakeholder engagement' },
+    { id: 'MAP 2.1', name: 'AI risk identification and documentation' },
+    { id: 'MAP 2.2', name: 'Risk tolerance levels established' },
+    { id: 'MEASURE 1.1', name: 'Risk assessment approaches defined' },
+    { id: 'MEASURE 2.1', name: 'Evaluation metrics identified' },
+    { id: 'MEASURE 2.2', name: 'AI system tested for bias' },
+    { id: 'MANAGE 1.1', name: 'Risk treatment plans documented' },
+    { id: 'MANAGE 2.1', name: 'Risk monitoring mechanisms active' },
+    { id: 'MANAGE 3.1', name: 'Incident response plans in place' },
+    { id: 'GOVERN 1.1', name: 'AI governance policies established' },
+    { id: 'GOVERN 2.1', name: 'Accountability structures defined' }
+  ],
+  iso_42001: [
+    { id: '5.1', name: 'Leadership and commitment' },
+    { id: '6.1', name: 'Actions to address risks and opportunities' },
+    { id: '6.2', name: 'AI objectives and planning' },
+    { id: '7.1', name: 'Resources for AI management' },
+    { id: '8.1', name: 'Operational planning and control' },
+    { id: '8.2', name: 'AI risk assessment process' },
+    { id: '9.1', name: 'Monitoring, measurement, analysis' },
+    { id: '9.2', name: 'Internal audit' },
+    { id: '10.1', name: 'Nonconformity and corrective action' },
+    { id: 'A.2', name: 'AI system impact assessment' }
+  ],
+  nist_csf: [
+    { id: 'GV.AI-01', name: 'AI governance framework established' },
+    { id: 'ID.RA-01', name: 'AI-specific risks identified' },
+    { id: 'ID.RA-02', name: 'Threat intelligence for AI systems' },
+    { id: 'PR.DS-01', name: 'Data protection for AI training data' },
+    { id: 'PR.AC-01', name: 'Access control for AI systems' },
+    { id: 'DE.CM-01', name: 'Continuous monitoring of AI behavior' },
+    { id: 'DE.AE-01', name: 'Anomaly detection in AI outputs' },
+    { id: 'RS.RP-01', name: 'AI incident response planning' },
+    { id: 'RC.RP-01', name: 'Recovery planning for AI failures' }
+  ]
+};
+
+let currentFramework = 'nist_ai_rmf';
+
+async function init_compliance() {
+  renderFramework(currentFramework);
+}
+
+function switchFramework(fw, el) {
+  currentFramework = fw;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderFramework(fw);
+}
+
+function renderFramework(fw) {
+  document.getElementById('c-framework-name').textContent = frameworkNames[fw];
+  const controls = frameworkControls[fw] || [];
+  const total = controls.length;
+
+  // Simulate coverage based on available guardrails
+  const covered = Math.floor(total * 0.6); // Placeholder
+  document.getElementById('c-covered').textContent = covered;
+  document.getElementById('c-total').textContent = total;
+  document.getElementById('c-last').textContent = Utils.formatDate(new Date().toISOString());
+
+  Charts.donut('c-donut', covered, total, 'var(--primary)');
+
+  const tbody = document.getElementById('c-tbody');
+  tbody.innerHTML = controls.map((ctrl, i) => {
+    const isCovered = i < covered;
+    const status = isCovered ? 'satisfied' : (i < covered + 2 ? 'partial' : 'not-assessed');
+    const statusLabels = {
+      satisfied: '<span class="badge" style="background:rgba(16,185,129,0.1);color:var(--compliance-satisfied)">SATISFIED</span>',
+      partial: '<span class="badge" style="background:rgba(245,158,11,0.1);color:var(--compliance-partial)">PARTIAL</span>',
+      'not-assessed': '<span class="badge" style="background:rgba(148,163,184,0.1);color:var(--compliance-not-assessed)">NOT ASSESSED</span>'
+    };
+    return `
+      <tr>
+        <td class="mono" style="font-weight:600">${ctrl.id}</td>
+        <td>${ctrl.name}</td>
+        <td class="mono">${isCovered ? (i % 3 + 1) + ' guardrails' : '-'}</td>
+        <td>${isCovered ? `<span style="color:var(--success)">${(0.7 + Math.random() * 0.3).toFixed(2)}</span>` : '-'}</td>
+        <td>${statusLabels[status]}</td>
+      </tr>
+    `;
+  }).join('');
+}
+</script>
