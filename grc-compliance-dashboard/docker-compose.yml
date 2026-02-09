@@ -7,7 +7,7 @@ services:
     ports:
       - "${PORT:-3000}:3000"
     environment:
-      - ETHICALZEN_API_URL=${ETHICALZEN_API_URL:-https://api.ethicalzen.ai}
+      - ETHICALZEN_API_URL=${ETHICALZEN_API_URL:?Set ETHICALZEN_API_URL in .env}
       - ETHICALZEN_API_KEY=${ETHICALZEN_API_KEY:-}
       - ETHICALZEN_TENANT_ID=${ETHICALZEN_TENANT_ID:-demo}
       - POLL_INTERVAL_MS=${POLL_INTERVAL_MS:-10000}

@@ -1,14 +1,18 @@
 /**
  * EthicalZen Cloud API Client
- * Wraps all calls to api.ethicalzen.ai with authentication headers,
+ * Wraps all calls to the cloud backend with authentication headers,
  * retry logic, and circuit breaker for graceful degradation.
+ *
+ * Cloud endpoint paths are loaded from environment variables via
+ * cloud-routes.js so the public source does not reveal internal structure.
  */
 
 const axios = require('axios');
+const routes = require('./cloud-routes');
 
 class ApiClient {
   constructor(config = {}) {
-    this.baseUrl = config.apiUrl || process.env.ETHICALZEN_API_URL || 'https://api.ethicalzen.ai';
+    this.baseUrl = config.apiUrl || process.env.ETHICALZEN_API_URL || '';
     this.apiKey = config.apiKey || process.env.ETHICALZEN_API_KEY || '';
     this.tenantId = config.tenantId || process.env.ETHICALZEN_TENANT_ID || 'demo';
     this.timeout = config.timeout || 10000;
@@ -84,55 +88,55 @@ class ApiClient {
     throw lastError;
   }
 
-  // Convenience methods
+  // Convenience methods — paths from cloud-routes.js (env-configurable)
   async getViolations(params = {}) {
-    return this.request('get', '/api/dc/violations', params);
+    return this.request('get', routes.violations, params);
   }
 
   async getEvidence(params = {}) {
-    return this.request('get', '/api/dc/evidence', params);
+    return this.request('get', routes.evidence, params);
   }
 
   async getEvidenceById(traceId) {
-    return this.request('get', `/api/dc/evidence/${traceId}`);
+    return this.request('get', `${routes.evidence}/${traceId}`);
   }
 
   async getRequests(params = {}) {
-    return this.request('get', '/api/dc/requests', params);
+    return this.request('get', routes.requests, params);
   }
 
   async getGuardrails() {
-    return this.request('get', '/api/guardrails/list');
+    return this.request('get', routes.guardrails);
   }
 
   async getDriftStatus() {
-    return this.request('get', '/api/guardrails/drift-status');
+    return this.request('get', routes.driftStatus);
   }
 
   async exportOscal(body = {}) {
-    return this.request('post', '/api/v2/grc/export/oscal', body);
+    return this.request('post', routes.exportOscal, body);
   }
 
   async exportStix(body = {}) {
-    return this.request('post', '/api/v2/grc/export/stix', body);
+    return this.request('post', routes.exportStix, body);
   }
 
   async taxiiDiscovery() {
-    return this.request('get', '/taxii2/');
+    return this.request('get', routes.taxiiDiscovery);
   }
 
   async taxiiCollections() {
-    return this.request('get', '/taxii2/ethicalzen/collections/');
+    return this.request('get', routes.taxiiCollections);
   }
 
   async taxiiObjects(collectionId, params = {}) {
-    return this.request('get', `/taxii2/ethicalzen/collections/${collectionId}/objects/`, params);
+    return this.request('get', `${routes.taxiiObjects}/${collectionId}/objects/`, params);
   }
 
   async testConnection() {
     try {
       const start = Date.now();
-      await this.request('get', '/api/health', null, 1);
+      await this.request('get', routes.health, null, 1);
       return { connected: true, latencyMs: Date.now() - start };
     } catch {
       return { connected: false, error: 'Cloud API unreachable' };

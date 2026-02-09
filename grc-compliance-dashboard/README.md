@@ -29,9 +29,9 @@ npm start
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `ETHICALZEN_API_URL` | Cloud API endpoint | `https://api.ethicalzen.ai` |
+| `ETHICALZEN_API_URL` | Cloud API endpoint (provided during onboarding) | — |
 | `ETHICALZEN_API_KEY` | Your API key (never exposed to browser) | — |
-| `ETHICALZEN_TENANT_ID` | Tenant identifier | `demo` |
+| `ETHICALZEN_TENANT_ID` | Tenant identifier | — |
 | `PORT` | Dashboard port | `3000` |
 | `POLL_INTERVAL_MS` | Violation poll interval | `10000` |
 | `CACHE_DIR` | SQLite cache directory | `./data` |
@@ -66,7 +66,7 @@ npm start
 ```
 Browser (:3000)                  GRC Dashboard Server              EthicalZen Cloud
 ┌─────────────────┐            ┌─────────────────────┐          ┌──────────────────┐
-│  SPA Frontend   │   fetch    │  Express Proxy       │  HTTPS   │ api.ethicalzen.ai│
+│  SPA Frontend   │   fetch    │  Express Proxy       │  HTTPS   │ Your Cloud API   │
 │  (HTML/CSS/JS)  │──────────> │  + Background Poller │────────> │                  │
 │                 │   SSE      │  + SQLite Cache      │          │ Violations API   │
 │  9 Views        │<────────── │  + Risk Aggregator   │          │ Evidence API     │
@@ -95,17 +95,17 @@ API keys are **never exposed to the browser** — all cloud requests are proxied
 
 ## API Proxy Routes
 
-| Dashboard Route | Cloud Endpoint |
-|-----------------|---------------|
-| `GET /api/grc/violations` | `GET /api/dc/violations` |
-| `GET /api/grc/violations/stream` | SSE (backed by poller) |
-| `GET /api/grc/evidence` | `GET /api/dc/evidence` |
-| `POST /api/grc/export/oscal` | `POST /api/v2/grc/export/oscal` |
-| `POST /api/grc/export/stix` | `POST /api/v2/grc/export/stix` |
-| `GET /api/grc/taxii/discovery` | `GET /taxii2/` |
-| `GET /api/grc/taxii/collections` | `GET /taxii2/ethicalzen/collections/` |
-| `GET /api/grc/risk` | Local computation |
-| `GET /api/grc/health` | Connection status |
+| Dashboard Route | Purpose |
+|-----------------|---------|
+| `GET /api/grc/violations` | Guardrail violation feed |
+| `GET /api/grc/violations/stream` | SSE live stream (backed by poller) |
+| `GET /api/grc/evidence` | Evidence audit trail |
+| `POST /api/grc/export/oscal` | Generate OSCAL 1.1.2 report |
+| `POST /api/grc/export/stix` | Generate STIX 2.1 bundle |
+| `GET /api/grc/taxii/discovery` | TAXII 2.1 server discovery |
+| `GET /api/grc/taxii/collections` | TAXII collection listing |
+| `GET /api/grc/risk` | Aggregated risk score (local computation) |
+| `GET /api/grc/health` | Connection + cache status |
 
 ## Development
 
