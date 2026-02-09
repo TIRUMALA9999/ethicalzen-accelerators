@@ -136,9 +136,14 @@ class ApiClient {
   async testConnection() {
     try {
       const start = Date.now();
+      // Use 3s timeout and 1 retry for fast failure detection (not the default 10s × 3)
+      const origTimeout = this.client.defaults.timeout;
+      this.client.defaults.timeout = 3000;
       await this.request('get', routes.health, null, 1);
+      this.client.defaults.timeout = origTimeout;
       return { connected: true, latencyMs: Date.now() - start };
     } catch {
+      this.client.defaults.timeout = this.timeout;
       return { connected: false, error: 'Cloud API unreachable' };
     }
   }

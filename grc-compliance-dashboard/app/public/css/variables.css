@@ -53,6 +53,12 @@
   --primary: #818cf8;
   --primary-dark: #6366f1;
   --primary-light: #a5b4fc;
+  --secondary: #a78bfa;
+  --accent: #22d3ee;
+  --success: #10b981;
+  --warning: #fbbf24;
+  --error: #f87171;
+  --info: #60a5fa;
 
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
@@ -63,6 +69,7 @@
   --text-primary: #f1f5f9;
   --text-secondary: #cbd5e1;
   --text-muted: #64748b;
+  --text-sidebar: #e2e8f0;
 
   --border: #334155;
   --border-light: #1e293b;

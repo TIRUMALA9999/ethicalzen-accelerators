@@ -146,6 +146,7 @@ class CacheStore {
     const evidence = [];
     const types = ['pii_violation', 'prompt_injection', 'toxicity', 'hipaa_violation', 'bias_detected'];
     const statuses = ['blocked', 'blocked', 'blocked', 'allowed', 'blocked'];
+    const severities = ['critical', 'high', 'high', 'moderate', 'moderate'];
 
     for (let i = 0; i < 50; i++) {
       const ts = new Date(now - i * 3600000).toISOString();
@@ -155,6 +156,7 @@ class CacheStore {
         trace_id: `trace_demo_${i}`,
         contract_id: `dc_demo_contract_${i % 3}`,
         violation_type: types[typeIdx],
+        severity: severities[typeIdx],
         status: statuses[typeIdx],
         risk_score: (0.3 + Math.random() * 0.7).toFixed(4),
         latency_ms: Math.floor(5 + Math.random() * 50),

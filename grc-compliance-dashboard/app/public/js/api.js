@@ -8,19 +8,38 @@ const API = {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null) url.searchParams.set(k, v);
     });
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
-    return res.json();
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 5000);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(tid);
+      if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+      return res.json();
+    } catch (err) {
+      clearTimeout(tid);
+      if (err.name === 'AbortError') throw new Error('Request timeout (5s)');
+      throw err;
+    }
   },
 
   async post(path, body = {}) {
-    const res = await fetch(this.base + path, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
-    return res.json();
+    const controller = new AbortController();
+    const tid = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(this.base + path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: controller.signal
+      });
+      clearTimeout(tid);
+      if (!res.ok) throw new Error(`API ${res.status}: ${res.statusText}`);
+      return res.json();
+    } catch (err) {
+      clearTimeout(tid);
+      if (err.name === 'AbortError') throw new Error('Request timeout (8s)');
+      throw err;
+    }
   },
 
   // Specific endpoints

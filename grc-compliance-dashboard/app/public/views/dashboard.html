@@ -75,24 +75,38 @@
 
 <script>
 async function init_dashboard() {
-  try {
-    // Load risk data
-    const risk = await API.risk();
+  // Fire both calls in parallel — each renders independently on settle
+  const [riskResult, vResult] = await Promise.allSettled([
+    API.risk(),
+    API.violations({ limit: 10 })
+  ]);
+
+  // --- Risk KPI section ---
+  if (riskResult.status === 'fulfilled') {
+    const risk = riskResult.value;
     document.getElementById('kpi-risk').textContent = risk.overall;
     document.getElementById('kpi-risk').style.color = Utils.riskColor(risk.overall);
-    document.getElementById('kpi-risk-zone').textContent = `${risk.zone.toUpperCase()} risk zone`;
+    document.getElementById('kpi-risk-zone').textContent = `${(risk.zone || '').toUpperCase()} risk zone`;
     document.getElementById('kpi-violations').textContent = risk.violations24h || 0;
-    document.getElementById('kpi-block-rate').textContent = `${risk.blockRate}% block rate`;
+    document.getElementById('kpi-block-rate').textContent = `${risk.blockRate || 0}% block rate`;
     document.getElementById('kpi-drift').textContent = risk.activeDriftAlerts || 0;
     document.getElementById('kpi-drift-status').textContent = risk.activeDriftAlerts > 0 ? 'Action needed' : 'All clear';
-
-    // Risk gauge
     Charts.gauge('chart-gauge', risk.overall);
+  } else {
+    document.getElementById('kpi-risk').textContent = '--';
+    document.getElementById('kpi-risk-zone').textContent = 'Unable to load risk data';
+    document.getElementById('kpi-violations').textContent = '--';
+    document.getElementById('kpi-block-rate').textContent = '--';
+    document.getElementById('kpi-drift').textContent = '--';
+    document.getElementById('kpi-drift-status').textContent = '--';
+    console.error('Risk load error:', riskResult.reason);
+  }
 
-    // Load recent violations
-    const vData = await API.violations({ limit: 10 });
+  // --- Violations section ---
+  const tbody = document.getElementById('recent-violations');
+  if (vResult.status === 'fulfilled') {
+    const vData = vResult.value;
     const violations = Array.isArray(vData) ? vData : (vData.violations || vData.data || []);
-    const tbody = document.getElementById('recent-violations');
     if (violations.length === 0) {
       tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="padding:30px">No violations in the last 24 hours</td></tr>';
     } else {
@@ -117,8 +131,9 @@ async function init_dashboard() {
       days.push({ label: Utils.formatDateShort(d.toISOString()), value: dayViolations.length, color: '#6366f1' });
     }
     Charts.barChart('chart-timeline', days);
-  } catch (err) {
-    console.error('Dashboard load error:', err);
+  } else {
+    tbody.innerHTML = '<tr><td colspan="4" class="empty-state" style="padding:30px">Unable to load violations</td></tr>';
+    console.error('Violations load error:', vResult.reason);
   }
 }
 </script>

@@ -44,16 +44,30 @@ const cacheStore = new CacheStore(cacheDir);
 const poller = new ViolationPoller(apiClient, cacheStore);
 const riskAggregator = new RiskAggregator();
 
+// Auto-seed demo data if cache is empty (ensures dashboard always has data on cold start)
+const cacheStats = cacheStore.getStats();
+if (cacheStats.enabled && cacheStats.violations === 0) {
+  const seeded = cacheStore.seedDemoData();
+  console.log(`  [Cache] Auto-seeded: ${seeded.violations} violations, ${seeded.evidence} evidence`);
+}
+
 // =============================================================================
-// Health & Status
+// Health & Status (non-blocking — returns cached connection status instantly)
 // =============================================================================
 
-app.get('/api/grc/health', async (req, res) => {
-  const connection = await apiClient.testConnection();
+let lastConnectionTest = { connected: false, error: 'Not yet tested' };
+
+async function updateConnectionStatus() {
+  lastConnectionTest = await apiClient.testConnection();
+}
+updateConnectionStatus(); // fire-and-forget on startup
+setInterval(updateConnectionStatus, 30000);
+
+app.get('/api/grc/health', (req, res) => {
   res.json({
     status: 'ok',
     service: 'grc-compliance-dashboard',
-    cloud: connection,
+    cloud: lastConnectionTest,
     poller: poller.getStats(),
     cache: cacheStore.getStats(),
     apiStatus: apiClient.getStatus()
@@ -81,21 +95,30 @@ app.get('/api/grc/violations/stream', (req, res) => {
 // =============================================================================
 
 app.get('/api/grc/violations', async (req, res) => {
+  const limit = parseInt(req.query.limit) || 100;
+  const cached = cacheStore.getViolations(limit);
+
+  // If cache has data, serve immediately and refresh in background
+  if (cached.length > 0) {
+    res.json({ violations: cached, source: 'cache', stale: true });
+    apiClient.getViolations(req.query)
+      .then(data => {
+        const v = Array.isArray(data) ? data : (data.violations || []);
+        if (v.length > 0) cacheStore.cacheViolations(v);
+      })
+      .catch(() => {});
+    return;
+  }
+
+  // No cache — must wait for cloud
   try {
     const data = await apiClient.getViolations(req.query);
     if (Array.isArray(data) || data.violations) {
-      const violations = Array.isArray(data) ? data : data.violations;
-      cacheStore.cacheViolations(violations);
+      cacheStore.cacheViolations(Array.isArray(data) ? data : data.violations);
     }
     res.json(data);
   } catch (err) {
-    // Serve from cache on failure
-    const cached = cacheStore.getViolations(parseInt(req.query.limit) || 100);
-    if (cached.length > 0) {
-      res.json({ violations: cached, source: 'cache', stale: true });
-    } else {
-      res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
-    }
+    res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
   }
 });
 
@@ -104,18 +127,27 @@ app.get('/api/grc/violations', async (req, res) => {
 // =============================================================================
 
 app.get('/api/grc/evidence', async (req, res) => {
+  const limit = parseInt(req.query.limit) || 100;
+  const cached = cacheStore.getEvidence(limit);
+
+  if (cached.length > 0) {
+    res.json({ evidence: cached, source: 'cache', stale: true });
+    apiClient.getEvidence(req.query)
+      .then(data => {
+        const r = Array.isArray(data) ? data : (data.evidence || data.data || []);
+        if (r.length > 0) cacheStore.cacheEvidence(r);
+      })
+      .catch(() => {});
+    return;
+  }
+
   try {
     const data = await apiClient.getEvidence(req.query);
     const records = Array.isArray(data) ? data : (data.evidence || data.data || []);
     cacheStore.cacheEvidence(records);
     res.json(data);
   } catch (err) {
-    const cached = cacheStore.getEvidence(parseInt(req.query.limit) || 100);
-    if (cached.length > 0) {
-      res.json({ evidence: cached, source: 'cache', stale: true });
-    } else {
-      res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
-    }
+    res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
   }
 });
 
@@ -246,18 +278,19 @@ app.get('/api/grc/taxii/collections/:id/objects', async (req, res) => {
 
 app.get('/api/grc/risk', async (req, res) => {
   try {
-    let violations, drift;
-    try {
-      violations = await apiClient.getViolations({ limit: 500 });
-      violations = Array.isArray(violations) ? violations : (violations.violations || []);
-    } catch {
-      violations = cacheStore.getViolations(500);
+    // Prefer cache for fast response; fall back to cloud
+    let violations = cacheStore.getViolations(500);
+    if (violations.length === 0) {
+      try {
+        const cloud = await apiClient.getViolations({ limit: 500 });
+        violations = Array.isArray(cloud) ? cloud : (cloud.violations || []);
+      } catch { /* use empty */ }
     }
-    try {
-      drift = await apiClient.getDriftStatus();
-      drift = Array.isArray(drift) ? drift : (drift.alerts || []);
-    } catch {
-      drift = [];
+    const drift = [];
+    const driftCached = cacheStore.get('drift-status');
+    if (driftCached) {
+      const arr = Array.isArray(driftCached) ? driftCached : (driftCached.alerts || []);
+      drift.push(...arr);
     }
     const risk = riskAggregator.computeRisk(violations, [], drift);
     res.json(risk);
