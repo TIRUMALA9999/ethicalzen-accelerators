@@ -232,6 +232,38 @@
             }
         }
 
+        @media (max-width: 1024px) {
+            .header-actions { gap: 0.5rem; }
+            .header-actions .btn-ghost { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                justify-content: flex-start;
+                gap: 0.25rem;
+                padding: 0 1rem;
+            }
+            .nav-tabs::-webkit-scrollbar { display: none; }
+            .nav-tab { white-space: nowrap; font-size: 0.85rem; padding: 0.6rem 1rem; }
+            .main { padding: 1rem; gap: 1rem; }
+            .template-grid { grid-template-columns: 1fr !important; }
+            .examples-grid { grid-template-columns: 1fr; }
+            .guardrail-grid { grid-template-columns: 1fr !important; }
+            .hub-filters { flex-wrap: wrap; gap: 0.25rem; }
+        }
+
+        @media (max-width: 480px) {
+            .header-content { flex-wrap: wrap; gap: 0.5rem; }
+            .header-actions { width: 100%; justify-content: flex-end; }
+            .main { padding: 0.75rem; }
+            .btn-generate { width: 100%; font-size: 0.9rem; }
+            .form-input, .form-textarea { font-size: 16px; }
+            .modal { margin: 0.5rem; max-height: 90vh; overflow-y: auto; }
+        }
+
         /* Design Panel */
         .design-panel {
             display: flex;
@@ -1492,33 +1524,36 @@
                     GitHub
                 </a>
                 <a href="https://ethicalzen.ai/docs" target="_blank" class="btn btn-ghost">Docs</a>
-                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌓</button>
-                <button class="btn btn-secondary" onclick="showApiKeyModal()" id="apiKeyBtn" title="Configure API Keys">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle dark and light theme">🌓</button>
+                <button class="btn btn-secondary" onclick="showApiKeyModal()" id="apiKeyBtn" title="Configure API Keys" aria-label="Configure API keys">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
                     <span id="apiKeyLabel">API Key</span>
                 </button>
             </div>
         </div>
     </header>
 
+    <!-- Skip to content -->
+    <a href="#viewCreate" class="sr-only" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;" onfocus="this.style.cssText='position:fixed;top:0;left:0;z-index:9999;padding:1rem;background:var(--accent);color:white;font-size:1rem;';" onblur="this.style.cssText='position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;';">Skip to main content</a>
+
     <!-- Navigation Tabs -->
-    <nav class="nav-tabs">
-        <button class="nav-tab active" onclick="switchView('create')" id="tabCreate">
-            <span>✨</span> Create Guardrail
+    <nav class="nav-tabs" role="tablist" aria-label="Studio views">
+        <button class="nav-tab active" onclick="switchView('create')" id="tabCreate" role="tab" aria-selected="true" aria-controls="viewCreate">
+            <span aria-hidden="true">✨</span> Create Guardrail
         </button>
-        <button class="nav-tab" onclick="switchView('hub')" id="tabHub">
-            <span>🌐</span> Guardrail Hub
-            <span class="tab-badge" id="hubCount">0</span>
+        <button class="nav-tab" onclick="switchView('hub')" id="tabHub" role="tab" aria-selected="false" aria-controls="viewHub">
+            <span aria-hidden="true">🌐</span> Guardrail Hub
+            <span class="tab-badge" id="hubCount" aria-label="guardrails in hub">0</span>
         </button>
-        <button class="nav-tab" onclick="switchView('mine')" id="tabMine">
-            <span>📁</span> My Guardrails
-            <span class="tab-badge" id="myCount">0</span>
+        <button class="nav-tab" onclick="switchView('mine')" id="tabMine" role="tab" aria-selected="false" aria-controls="viewMine">
+            <span aria-hidden="true">📁</span> My Guardrails
+            <span class="tab-badge" id="myCount" aria-label="saved guardrails">0</span>
         </button>
     </nav>
 
     <!-- Create View -->
-    <div class="view-container active" id="viewCreate">
-    <main class="main">
+    <div class="view-container active" id="viewCreate" role="tabpanel" aria-labelledby="tabCreate">
+    <main class="main" role="main">
         <!-- Design Panel -->
         <div class="design-panel">
             <div class="panel-header">
@@ -1810,7 +1845,7 @@
     </div><!-- End Create View -->
 
     <!-- Guardrail Hub View -->
-    <div class="view-container" id="viewHub">
+    <div class="view-container" id="viewHub" role="tabpanel" aria-labelledby="tabHub">
         <div class="hub-container">
             <div class="hub-header">
                 <h1 class="hub-title">
@@ -1859,7 +1894,7 @@
     </div><!-- End Hub View -->
 
     <!-- My Guardrails View -->
-    <div class="view-container" id="viewMine">
+    <div class="view-container" id="viewMine" role="tabpanel" aria-labelledby="tabMine">
         <div class="hub-container">
             <div class="hub-header">
                 <h1 class="hub-title">
@@ -1902,9 +1937,9 @@
     </footer>
 
     <!-- API Key Modal -->
-    <div class="modal-backdrop" id="apiKeyModal">
+    <div class="modal-backdrop" id="apiKeyModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal" style="max-width: 500px;">
-            <h3 class="modal-title">🔑 API Keys</h3>
+            <h3 class="modal-title" id="modalTitle">🔑 API Keys</h3>
             
             <!-- EthicalZen API Key -->
             <div class="form-group">
@@ -1983,11 +2018,16 @@
         
         function switchView(view) {
             state.currentView = view;
-            
-            // Update tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
-            document.getElementById('tab' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
-            
+
+            // Update tabs + ARIA
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+            });
+            const activeTab = document.getElementById('tab' + view.charAt(0).toUpperCase() + view.slice(1));
+            activeTab.classList.add('active');
+            activeTab.setAttribute('aria-selected', 'true');
+
             // Update views
             document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
             document.getElementById('view' + view.charAt(0).toUpperCase() + view.slice(1)).classList.add('active');
@@ -2131,14 +2171,15 @@
             
             grid.innerHTML = guardrails.map(g => {
                 // Generate a nice display name
-                const name = getDisplayName(g);
+                const name = escapeHtml(getDisplayName(g));
                 const accuracy = g.accuracy ? (typeof g.accuracy === 'number' && g.accuracy <= 1 ? Math.round(g.accuracy * 100) : Math.round(g.accuracy)) : '--';
                 const icon = getIconForGuardrail(g);
-                const category = getCategoryFromGuardrail(g);
+                const category = escapeHtml(getCategoryFromGuardrail(g));
                 const source = g.source || 'community';
                 const badgeClass = source === 'yours' ? 'badge-yours' : 'badge-community';
                 const badgeText = source === 'yours' ? 'Yours' : 'Community';
-                
+                const desc = escapeHtml(g.description || 'No description available.');
+
                 return `
                     <div class="guardrail-card" onclick="useHubGuardrail('${encodeURIComponent(JSON.stringify({id: g.id, name: g.name, description: g.description}))}')">
                         <div class="guardrail-card-header">
@@ -2150,7 +2191,7 @@
                             <span class="guardrail-card-badge ${badgeClass}">${badgeText}</span>
                         </div>
                         <div class="guardrail-card-description">
-                            ${g.description || 'No description available.'}
+                            ${desc}
                         </div>
                         <div class="guardrail-card-metrics">
                             <div class="guardrail-metric">
@@ -2378,13 +2419,14 @@
             
             emptyState.style.display = 'none';
             grid.innerHTML = filtered.map(g => {
-                const name = g.name || 'Unnamed Guardrail';
+                const name = escapeHtml(g.name || 'Unnamed Guardrail');
                 const accuracy = g.accuracy ? Math.round(g.accuracy * 100) : '--';
                 const icon = getIconForGuardrail(g);
                 const savedDate = g.savedAt ? new Date(g.savedAt).toLocaleDateString() : '';
-                
+                const desc = escapeHtml(g.description || 'No description available.');
+
                 return `
-                    <div class="guardrail-card" onclick="viewGuardrailDetails('${g.localId}')">
+                    <div class="guardrail-card" onclick="viewGuardrailDetails('${escapeHtml(g.localId)}')">
                         <div class="guardrail-card-header">
                             <div>
                                 <div class="guardrail-card-icon">${icon}</div>
@@ -2394,7 +2436,7 @@
                             <span class="guardrail-card-badge badge-yours">Your Guardrail</span>
                         </div>
                         <div class="guardrail-card-description">
-                            ${g.description || 'No description available.'}
+                            ${desc}
                         </div>
                         <div class="guardrail-card-metrics">
                             <div class="guardrail-metric">
@@ -3923,15 +3965,37 @@ if (result.decision === 'block') {
         // API KEY MANAGEMENT
         // ============================================================
         
+        let _modalTrigger = null;
+
         function showApiKeyModal() {
-            document.getElementById('apiKeyModal').classList.add('visible');
+            _modalTrigger = document.activeElement;
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.add('visible');
             document.getElementById('apiKeyInput').value = state.apiKey;
             document.getElementById('llmApiKeyInput').value = state.llmApiKey || '';
             document.getElementById('llmProvider').value = state.llmProvider || 'groq';
+            // Focus first input for accessibility
+            setTimeout(() => document.getElementById('apiKeyInput').focus(), 100);
+            // Trap focus inside modal
+            modal.addEventListener('keydown', _trapModalFocus);
         }
 
         function hideApiKeyModal() {
-            document.getElementById('apiKeyModal').classList.remove('visible');
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.remove('visible');
+            modal.removeEventListener('keydown', _trapModalFocus);
+            // Return focus to trigger element
+            if (_modalTrigger) { _modalTrigger.focus(); _modalTrigger = null; }
+        }
+
+        function _trapModalFocus(e) {
+            if (e.key !== 'Tab') return;
+            const modal = e.currentTarget.querySelector('.modal');
+            const focusable = modal.querySelectorAll('input, select, button, [tabindex]:not([tabindex="-1"])');
+            if (focusable.length === 0) return;
+            const first = focusable[0], last = focusable[focusable.length - 1];
+            if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+            else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
         }
 
         function saveApiKey() {
@@ -4040,14 +4104,14 @@ if (result.decision === 'block') {
         // Initialize API key button state
         updateApiKeyButton();
         
-        // Show mode notice
+        // Show mode notice or prompt for API key
         setTimeout(() => {
-            if (state.llmApiKey) {
-                showToast(`🚀 Using your ${state.llmProvider.toUpperCase()} key for faster generation!`, 'success');
-            } else if (state.apiKey === DEMO_API_KEY) {
-                showToast('Demo key: 10 req/min limit. Add your LLM key for faster generation.', 'info');
+            if (!state.apiKey) {
+                showApiKeyModal();
+            } else if (state.llmApiKey) {
+                showToast(`Using your ${state.llmProvider.toUpperCase()} key for faster generation.`, 'success');
             }
-        }, 1000);
+        }, 500);
     </script>
 </body>
 </html>
