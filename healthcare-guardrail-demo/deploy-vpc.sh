@@ -95,7 +95,7 @@ case "$MODE" in
     # Pull latest
     print_info "Pulling latest gateway image..."
     docker compose -f "${SCRIPT_DIR}/deploy/docker-compose.demo.yml" pull 2>/dev/null || \
-      docker pull gcr.io/ethicalzen-public-04085/ethicalzen-gateway:latest
+      docker pull us-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-public/ethicalzen-gateway:latest
 
     # Start
     print_info "Starting gateway..."

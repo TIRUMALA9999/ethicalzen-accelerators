@@ -20,7 +20,7 @@ REGION="${GCP_REGION:-us-central1}"
 ZONE="${GCP_ZONE:-us-central1-a}"
 VM_NAME="ethicalzen-demo-gateway"
 MACHINE_TYPE="e2-standard-2"
-IMAGE="gcr.io/${PROJECT_ID}/ethicalzen-gateway:latest"
+IMAGE="us-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-public/ethicalzen-gateway:latest"
 FIREWALL_RULE="allow-ethicalzen-demo"
 
 # Parse arguments

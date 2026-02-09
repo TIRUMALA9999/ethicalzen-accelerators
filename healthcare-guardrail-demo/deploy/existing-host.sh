@@ -20,7 +20,7 @@ source "${SCRIPT_DIR}/lib/health.sh"
 TARGET_HOST="${VM_HOST:-}"
 SSH_USER="${SSH_USER:-$(whoami)}"
 SSH_KEY="${SSH_KEY_PATH:-~/.ssh/id_rsa}"
-IMAGE="gcr.io/${GCP_PROJECT_ID:-ethicalzen-public-04085}/ethicalzen-gateway:latest"
+IMAGE="us-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-public/ethicalzen-gateway:latest"
 CONTAINER_NAME="ethicalzen-gateway"
 
 # Parse arguments

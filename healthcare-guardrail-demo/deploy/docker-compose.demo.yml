@@ -6,7 +6,7 @@ version: "3.8"
 
 services:
   ethicalzen-gateway:
-    image: gcr.io/ethicalzen-public-04085/ethicalzen-gateway:latest
+    image: us-docker.pkg.dev/ethicalzen-public-04085/ethicalzen-public/ethicalzen-gateway:latest
     container_name: ethicalzen-gateway-demo
     ports:
       - "${GATEWAY_PORT:-8080}:8080"      # Go gateway
