@@ -77,6 +77,13 @@ const App = {
       }
       container.innerHTML = await res.text();
 
+      // innerHTML does NOT execute <script> tags — re-create them so the browser runs them
+      container.querySelectorAll('script').forEach(oldScript => {
+        const newScript = document.createElement('script');
+        newScript.textContent = oldScript.textContent;
+        oldScript.parentNode.replaceChild(newScript, oldScript);
+      });
+
       // Execute view init if defined
       if (window[`init_${name}`]) {
         await window[`init_${name}`]();
