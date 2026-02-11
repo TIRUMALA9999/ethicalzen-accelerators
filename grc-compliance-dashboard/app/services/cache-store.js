@@ -1,28 +1,175 @@
 /**
  * SQLite Cache Store for offline mode
  * Caches violations, evidence, exports, and metrics locally.
+ * Supports both better-sqlite3 (native, preferred) and sql.js (pure JS fallback).
  */
 
 const path = require('path');
+const fs = require('fs');
+
 let Database;
 try {
   Database = require('better-sqlite3');
+  // Verify native bindings actually work (require succeeds but native .node may be missing)
+  new Database(':memory:').close();
 } catch {
   Database = null;
 }
 
+// Fallback: try sql.js (pure JavaScript SQLite — no native build needed)
+let initSqlJs;
+if (!Database) {
+  try {
+    initSqlJs = require('sql.js');
+  } catch {
+    initSqlJs = null;
+  }
+}
+
+/**
+ * Wrapper around sql.js to provide a similar API to better-sqlite3
+ */
+class SqlJsWrapper {
+  constructor(dbPath) {
+    this.dbPath = dbPath;
+    this.db = null;
+    this._ready = false;
+    this._inTransaction = false;
+  }
+
+  async init() {
+    const SQL = await initSqlJs();
+    // Load existing DB file if it exists
+    if (fs.existsSync(this.dbPath)) {
+      const buffer = fs.readFileSync(this.dbPath);
+      this.db = new SQL.Database(buffer);
+    } else {
+      this.db = new SQL.Database();
+    }
+    this._ready = true;
+  }
+
+  _save() {
+    if (!this._ready) return;
+    try {
+      const data = this.db.export();
+      const buffer = Buffer.from(data);
+      fs.writeFileSync(this.dbPath, buffer);
+    } catch (e) {
+      console.warn('[Cache] Failed to save DB:', e.message);
+    }
+  }
+
+  pragma() { /* no-op for sql.js */ }
+
+  exec(sql) {
+    // sql.js db.run() only handles one statement; use exec for multiple
+    const statements = sql.split(';').map(s => s.trim()).filter(s => s.length > 0);
+    for (const stmt of statements) {
+      this.db.run(stmt);
+    }
+    this._save();
+  }
+
+  prepare(sql) {
+    const db = this.db;
+    const wrapper = this;
+    return {
+      run(...params) {
+        db.run(sql, params);
+        if (!wrapper._inTransaction) wrapper._save();
+      },
+      all(...params) {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        const rows = [];
+        while (stmt.step()) {
+          rows.push(stmt.getAsObject());
+        }
+        stmt.free();
+        return rows;
+      },
+      get(...params) {
+        const stmt = db.prepare(sql);
+        stmt.bind(params);
+        let row = null;
+        if (stmt.step()) {
+          row = stmt.getAsObject();
+        }
+        stmt.free();
+        return row;
+      }
+    };
+  }
+
+  transaction(fn) {
+    const wrapper = this;
+    return function(...args) {
+      // Batch mode: suppress per-statement saves, save once at the end
+      wrapper._inTransaction = true;
+      try {
+        fn(...args);
+      } finally {
+        wrapper._inTransaction = false;
+      }
+      wrapper._save();
+    };
+  }
+}
+
 class CacheStore {
   constructor(cacheDir) {
-    this.enabled = !!Database;
-    if (!this.enabled) {
-      console.warn('[Cache] better-sqlite3 not available, caching disabled');
-      return;
+    this.enabled = false;
+    this.db = null;
+    this._cacheDir = cacheDir;
+    this._initSync(cacheDir);
+  }
+
+  _initSync(cacheDir) {
+    // Try better-sqlite3 first (native, fast)
+    if (Database) {
+      try {
+        const dbPath = path.join(cacheDir || process.env.CACHE_DIR || './data', 'grc-cache.db');
+        this.db = new Database(dbPath);
+        this.db.pragma('journal_mode = WAL');
+        this.enabled = true;
+        this._backend = 'better-sqlite3';
+        this.initTables();
+        return;
+      } catch (e) {
+        console.warn('[Cache] better-sqlite3 failed:', e.message);
+      }
     }
 
-    const dbPath = path.join(cacheDir || process.env.CACHE_DIR || './data', 'grc-cache.db');
-    this.db = new Database(dbPath);
-    this.db.pragma('journal_mode = WAL');
-    this.initTables();
+    // Fallback: sql.js (async init)
+    if (initSqlJs) {
+      this._backend = 'sql.js';
+      this._sqlJsReady = this._initSqlJs(cacheDir);
+    } else {
+      console.warn('[Cache] No SQLite library available, caching disabled');
+    }
+  }
+
+  async _initSqlJs(cacheDir) {
+    try {
+      const dbPath = path.join(cacheDir || process.env.CACHE_DIR || './data', 'grc-cache.db');
+      const wrapper = new SqlJsWrapper(dbPath);
+      await wrapper.init();
+      this.db = wrapper;
+      this.enabled = true;
+      this.initTables();
+      console.log('  [Cache] Using sql.js (pure JavaScript SQLite fallback)');
+      return true;
+    } catch (e) {
+      console.warn('[Cache] sql.js init failed:', e.message);
+      return false;
+    }
+  }
+
+  async ensureReady() {
+    if (this._sqlJsReady) {
+      await this._sqlJsReady;
+    }
   }
 
   initTables() {
@@ -140,7 +287,7 @@ class CacheStore {
   }
 
   seedDemoData() {
-    if (!this.enabled) return;
+    if (!this.enabled) return { violations: 0, evidence: 0, error: 'Cache is disabled — no SQLite library available' };
     const now = new Date();
     const violations = [];
     const evidence = [];

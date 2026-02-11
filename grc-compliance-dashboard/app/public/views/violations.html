@@ -55,7 +55,17 @@
 <script>
 let sseSource = null;
 
+// Cleanup SSE connection when navigating away from this view
+function cleanup_violations() {
+  if (sseSource) {
+    sseSource.close();
+    sseSource = null;
+  }
+}
+
 async function init_violations() {
+  // Register cleanup for when view changes
+  window._viewCleanup = cleanup_violations;
   await loadViolations();
   connectSSE();
 }

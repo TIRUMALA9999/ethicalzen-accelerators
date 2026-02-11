@@ -10,6 +10,9 @@ const Theme = {
     localStorage.setItem('ez-grc-theme', theme);
     const btn = document.getElementById('theme-toggle');
     if (btn) btn.textContent = theme === 'dark' ? '\u2600' : '\u263E';
+
+    // Dispatch a custom event so charts and other components can re-render with new theme colors
+    window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
   },
 
   toggle() {

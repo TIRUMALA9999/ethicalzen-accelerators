@@ -45,11 +45,16 @@ const poller = new ViolationPoller(apiClient, cacheStore);
 const riskAggregator = new RiskAggregator();
 
 // Auto-seed demo data if cache is empty (ensures dashboard always has data on cold start)
-const cacheStats = cacheStore.getStats();
-if (cacheStats.enabled && cacheStats.violations === 0) {
-  const seeded = cacheStore.seedDemoData();
-  console.log(`  [Cache] Auto-seeded: ${seeded.violations} violations, ${seeded.evidence} evidence`);
+// Supports async init for sql.js fallback
+async function autoSeed() {
+  await cacheStore.ensureReady();
+  const cacheStats = cacheStore.getStats();
+  if (cacheStats.enabled && cacheStats.violations === 0) {
+    const seeded = cacheStore.seedDemoData();
+    console.log(`  [Cache] Auto-seeded: ${seeded.violations} violations, ${seeded.evidence} evidence`);
+  }
 }
+autoSeed();
 
 // =============================================================================
 // Health & Status (non-blocking — returns cached connection status instantly)
@@ -314,7 +319,11 @@ app.post('/api/grc/cache/clear', (req, res) => {
 
 app.post('/api/grc/cache/seed-demo', (req, res) => {
   const result = cacheStore.seedDemoData();
-  res.json({ success: true, message: 'Demo data seeded', ...result });
+  if (result && result.error) {
+    res.status(503).json({ success: false, message: result.error, ...result });
+  } else {
+    res.json({ success: true, message: 'Demo data seeded', ...result });
+  }
 });
 
 // =============================================================================

@@ -7,7 +7,7 @@
 <div class="card" style="margin-bottom:20px">
   <div class="card-header">
     <span class="card-title">TAXII 2.1 Server Discovery</span>
-    <button class="btn btn-sm btn-primary" onclick="loadDiscovery()">Refresh</button>
+    <button class="btn btn-sm btn-primary" id="taxii-refresh-btn">Refresh</button>
   </div>
   <div id="taxii-discovery" style="font-size:13px;color:var(--text-secondary)">
     <div class="loading-spinner"></div> Discovering...
@@ -39,6 +39,7 @@
 
 <script>
 async function init_taxii() {
+  document.getElementById('taxii-refresh-btn').addEventListener('click', () => loadDiscovery());
   await loadDiscovery();
   await loadCollections();
 }
@@ -67,21 +68,27 @@ async function loadCollections() {
       document.getElementById('taxii-collections').innerHTML = '<div class="empty-state" style="padding:20px">No collections available</div>';
       return;
     }
-    document.getElementById('taxii-collections').innerHTML = collections.map(c => `
-      <div style="padding:12px 16px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background 0.15s"
-           onclick="loadObjects('${c.id}')"
-           onmouseover="this.style.background='var(--bg-tertiary)'"
-           onmouseout="this.style.background=''">
+    const container = document.getElementById('taxii-collections');
+    container.innerHTML = collections.map((c, idx) => `
+      <div class="taxii-collection-row" data-collection-idx="${idx}"
+           style="padding:12px 16px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background 0.15s">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <div>
-            <div style="font-weight:600;font-size:14px">${c.title || c.id}</div>
-            <div style="font-size:12px;color:var(--text-muted)">${c.description || ''}</div>
+            <div style="font-weight:600;font-size:14px">${(c.title || c.id).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+            <div style="font-size:12px;color:var(--text-muted)">${(c.description || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
           </div>
           <span class="badge badge-info">${c.can_read ? 'Read' : ''} ${c.can_write ? 'Write' : ''}</span>
         </div>
-        <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:4px">${c.id}</div>
+        <div class="mono" style="font-size:11px;color:var(--text-muted);margin-top:4px">${(c.id || '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
       </div>
     `).join('');
+    // Bind click events safely using addEventListener instead of inline onclick
+    container.querySelectorAll('.taxii-collection-row').forEach(row => {
+      const idx = parseInt(row.dataset.collectionIdx);
+      row.addEventListener('click', () => loadObjects(collections[idx].id));
+      row.addEventListener('mouseover', () => row.style.background = 'var(--bg-tertiary)');
+      row.addEventListener('mouseout', () => row.style.background = '');
+    });
   } catch (err) {
     document.getElementById('taxii-collections').innerHTML = `<div class="empty-state" style="padding:20px;color:var(--error)">${err.message}</div>`;
   }
