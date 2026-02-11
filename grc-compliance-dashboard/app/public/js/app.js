@@ -49,7 +49,7 @@ const App = {
     // Update header title
     const titles = {
       dashboard: 'Executive Dashboard',
-      violations: 'Violation Monitoring',
+      violations: 'Violations',
       compliance: 'Compliance Matrix',
       exports: 'Export Builder',
       taxii: 'TAXII Browser',
@@ -68,6 +68,12 @@ const App = {
   async loadView(name) {
     const container = document.getElementById('view-container');
     if (!container) return;
+
+    // Cleanup previous view (e.g., close SSE connections)
+    if (typeof window._viewCleanup === 'function') {
+      window._viewCleanup();
+      window._viewCleanup = null;
+    }
 
     try {
       const res = await fetch(`/views/${name}.html`);

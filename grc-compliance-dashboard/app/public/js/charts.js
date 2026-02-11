@@ -2,6 +2,22 @@
 
 const Charts = {
 
+  // Track last rendered chart params for re-rendering on theme change
+  _rendered: [],
+
+  _trackRender(type, args) {
+    // Remove any existing entry for the same canvasId to avoid duplicates
+    this._rendered = this._rendered.filter(r => r.args[0] !== args[0]);
+    this._rendered.push({ type, args });
+  },
+
+  reRenderAll() {
+    // Re-render all tracked charts with their last params (for theme change)
+    for (const { type, args } of this._rendered) {
+      this[type](...args);
+    }
+  },
+
   // Donut chart for compliance coverage
   donut(canvasId, value, total, color = 'var(--primary)') {
     const canvas = document.getElementById(canvasId);
@@ -38,6 +54,7 @@ const Charts = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`${Math.round(pct * 100)}%`, cx, cy);
+    this._trackRender('donut', [canvasId, value, total, color]);
   },
 
   // Bar chart for violation timeline
@@ -93,6 +110,7 @@ const Charts = {
         ctx.fillText(d.label, x + barW / 2, ch - pad.bottom + 14);
       }
     });
+    this._trackRender('barChart', [canvasId, data, options]);
   },
 
   // Risk gauge (semi-circle)
@@ -149,5 +167,12 @@ const Charts = {
     ctx.font = `${r * 0.15}px Inter, sans-serif`;
     ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
     ctx.fillText('RISK SCORE', cx, cy + 12);
+    this._trackRender('gauge', [canvasId, score]);
   }
 };
+
+// Re-render all charts when theme changes
+window.addEventListener('themechange', () => {
+  // Small delay to allow CSS variables to update
+  setTimeout(() => Charts.reRenderAll(), 50);
+});

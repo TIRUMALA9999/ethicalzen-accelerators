@@ -98,10 +98,17 @@ async function generateExport() {
   const preview = document.getElementById('ex-preview');
   preview.innerHTML = '<div style="text-align:center;padding:40px"><div class="loading-spinner"></div><p style="margin-top:12px">Generating...</p></div>';
 
+  const orgName = document.getElementById('ex-org').value.trim();
+  if (!orgName) {
+    preview.innerHTML = `<div class="empty-state"><div class="empty-state-title">Validation Error</div><p>Organization name is required</p></div>`;
+    Utils.toast('Organization name is required', 'error');
+    return;
+  }
+
   try {
     const body = {
       framework: document.getElementById('ex-framework').value || undefined,
-      organizationName: document.getElementById('ex-org').value || 'EthicalZen',
+      organizationName: orgName,
       title: document.getElementById('ex-title').value || undefined
     };
 
