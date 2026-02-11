@@ -1,5 +1,5 @@
 <div class="page-header">
-  <h1>Violation Monitoring</h1>
+  <h1>Violations</h1>
   <p>Real-time guardrail violation feed with live updates</p>
 </div>
 
@@ -88,7 +88,13 @@ function renderViolations(violations) {
     feed.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128994;</div><div class="empty-state-title">No violations detected</div><p>All guardrails are operating normally</p></div>';
     return;
   }
-  feed.innerHTML = violations.map(v => `
+  feed.innerHTML = `<div class="violation-item" style="font-weight:600;font-size:12px;color:var(--text-muted);border-bottom:2px solid var(--border)">
+      <div style="flex:0 0 90px">TIME</div>
+      <div style="flex:1">VIOLATION</div>
+      <div style="flex:0 0 80px">STATUS</div>
+      <div style="flex:0 0 80px">RISK</div>
+      <div style="flex:0 0 60px;text-align:right">LATENCY</div>
+    </div>` + violations.map(v => `
     <div class="violation-item">
       <div style="flex:0 0 90px" class="mono">${Utils.timeAgo(v.timestamp)}</div>
       <div style="flex:1">
@@ -112,10 +118,6 @@ function updateStats(violations) {
 function connectSSE() {
   if (sseSource) sseSource.close();
   sseSource = API.connectViolationStream((event, data) => {
-    if (event === 'connected') {
-      document.getElementById('v-sse').textContent = 'Connected';
-      document.getElementById('v-sse').style.color = 'var(--success)';
-    }
     if (event === 'violation') {
       const feed = document.getElementById('violation-feed');
       const item = document.createElement('div');
@@ -136,5 +138,14 @@ function connectSSE() {
       document.getElementById('v-clients').textContent = data.totalClients || 1;
     }
   });
+  // Use native onopen — fires when SSE connection is established
+  sseSource.onopen = function() {
+    document.getElementById('v-sse').textContent = 'Connected';
+    document.getElementById('v-sse').style.color = 'var(--success)';
+  };
+  sseSource.onerror = function() {
+    document.getElementById('v-sse').textContent = 'Offline';
+    document.getElementById('v-sse').style.color = 'var(--error)';
+  };
 }
 </script>

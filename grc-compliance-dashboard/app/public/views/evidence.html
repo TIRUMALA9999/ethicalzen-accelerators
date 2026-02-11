@@ -44,37 +44,57 @@
 <script>
 async function init_evidence() {
   await loadEvidence();
+  document.getElementById('e-search').addEventListener('input', filterEvidence);
+  document.getElementById('e-status').addEventListener('change', filterEvidence);
 }
+
+let allEvidence = [];
 
 async function loadEvidence() {
   try {
-    const search = document.getElementById('e-search')?.value || '';
-    const status = document.getElementById('e-status')?.value || '';
-    const data = await API.evidence({ limit: 200, search, status });
-    const records = Array.isArray(data) ? data : (data.evidence || data.data || []);
-
-    document.getElementById('e-count').textContent = `Evidence Records (${records.length})`;
-
-    const tbody = document.getElementById('e-tbody');
-    if (!records.length) {
-      tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:40px">No evidence records found</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = records.map(e => `
-      <tr>
-        <td class="mono">${Utils.formatDate(e.timestamp)}</td>
-        <td class="mono">${Utils.truncate(e.trace_id || e.id || '-', 20)}</td>
-        <td class="mono">${Utils.truncate(e.contract_id || '-', 20)}</td>
-        <td>${e.request_type || e.violation_type || '-'}</td>
-        <td>${Utils.statusBadge(e.status)}</td>
-        <td>${Utils.scoreBar(parseFloat(e.risk_score) || 0)}</td>
-        <td class="mono">${e.latency_ms || '-'}ms</td>
-      </tr>
-    `).join('');
+    const data = await API.evidence({ limit: 200 });
+    allEvidence = Array.isArray(data) ? data : (data.evidence || data.data || []);
+    filterEvidence();
   } catch (err) {
     document.getElementById('e-tbody').innerHTML =
       `<tr><td colspan="7" class="empty-state" style="padding:40px">Error: ${err.message}</td></tr>`;
   }
+}
+
+function filterEvidence() {
+  const search = (document.getElementById('e-search')?.value || '').toLowerCase().trim();
+  const status = (document.getElementById('e-status')?.value || '').toLowerCase();
+
+  let records = allEvidence;
+  if (search) {
+    records = records.filter(e =>
+      (e.trace_id || e.id || '').toLowerCase().includes(search) ||
+      (e.contract_id || '').toLowerCase().includes(search) ||
+      (e.request_type || e.violation_type || '').toLowerCase().includes(search)
+    );
+  }
+  if (status) {
+    records = records.filter(e => (e.status || '').toLowerCase() === status);
+  }
+
+  document.getElementById('e-count').textContent = `Evidence Records (${records.length})`;
+
+  const tbody = document.getElementById('e-tbody');
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="7" class="empty-state" style="padding:40px">No evidence records found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = records.map(e => `
+    <tr>
+      <td class="mono">${Utils.formatDate(e.timestamp)}</td>
+      <td class="mono">${Utils.truncate(e.trace_id || e.id || '-', 20)}</td>
+      <td class="mono">${Utils.truncate(e.contract_id || '-', 20)}</td>
+      <td>${e.request_type || e.violation_type || '-'}</td>
+      <td>${Utils.statusBadge(e.status)}</td>
+      <td>${Utils.scoreBar(parseFloat(e.risk_score) || 0)}</td>
+      <td class="mono">${e.latency_ms || '-'}ms</td>
+    </tr>
+  `).join('');
 }
 </script>
