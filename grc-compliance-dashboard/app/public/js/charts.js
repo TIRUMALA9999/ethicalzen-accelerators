@@ -113,6 +113,115 @@ const Charts = {
     this._trackRender('barChart', [canvasId, data, options]);
   },
 
+  // Stacked bar chart for severity breakdown per time bucket
+  stackedBarChart(canvasId, buckets, options = {}) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width = canvas.offsetWidth * 2;
+    const h = canvas.height = canvas.offsetHeight * 2;
+    ctx.scale(2, 2);
+
+    const cw = canvas.offsetWidth;
+    const ch = canvas.offsetHeight;
+    const pad = { top: 10, right: 10, bottom: 30, left: 40 };
+
+    if (!buckets.length) return;
+
+    const severityColors = {
+      critical: '#ef4444',
+      high: '#f97316',
+      moderate: '#f59e0b',
+      low: '#10b981'
+    };
+    const severityOrder = ['critical', 'high', 'moderate', 'low'];
+
+    const max = Math.max(...buckets.map(b => {
+      return severityOrder.reduce((sum, s) => sum + (b.segments[s] || 0), 0);
+    }), 1);
+
+    const barW = (cw - pad.left - pad.right) / buckets.length - 4;
+
+    // Y axis grid
+    const borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border').trim();
+    const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim();
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 0.5;
+    for (let i = 0; i <= 4; i++) {
+      const y = pad.top + (ch - pad.top - pad.bottom) * (1 - i / 4);
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y);
+      ctx.lineTo(cw - pad.right, y);
+      ctx.stroke();
+      ctx.fillStyle = mutedColor;
+      ctx.font = '10px Inter, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(Math.round(max * i / 4), pad.left - 6, y + 3);
+    }
+
+    // Stacked bars
+    buckets.forEach((b, i) => {
+      const x = pad.left + i * ((cw - pad.left - pad.right) / buckets.length) + 2;
+      let yOffset = 0;
+      // Draw segments bottom-up: low → moderate → high → critical
+      for (let s = severityOrder.length - 1; s >= 0; s--) {
+        const sev = severityOrder[s];
+        const count = b.segments[sev] || 0;
+        if (count === 0) continue;
+        const segH = (count / max) * (ch - pad.top - pad.bottom);
+        const y = ch - pad.bottom - yOffset - segH;
+        ctx.fillStyle = severityColors[sev];
+        ctx.beginPath();
+        if (yOffset === 0) {
+          ctx.roundRect(x, y, barW, segH, [3, 3, 0, 0]);
+        } else {
+          ctx.rect(x, y, barW, segH);
+        }
+        ctx.fill();
+        yOffset += segH;
+      }
+
+      // Count label on top of bar
+      const total = severityOrder.reduce((sum, sev) => sum + (b.segments[sev] || 0), 0);
+      if (total > 0) {
+        const topY = ch - pad.bottom - yOffset;
+        ctx.fillStyle = mutedColor;
+        ctx.font = 'bold 9px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(total, x + barW / 2, topY - 3);
+      }
+
+      // X label
+      if (b.label) {
+        ctx.fillStyle = mutedColor;
+        ctx.font = '10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(b.label, x + barW / 2, ch - pad.bottom + 14);
+      }
+    });
+
+    // Legend
+    const legendY = pad.top;
+    let legendX = cw - pad.right;
+    ctx.font = '9px Inter, sans-serif';
+    ctx.textAlign = 'right';
+    for (const sev of severityOrder) {
+      const label = sev.charAt(0).toUpperCase() + sev.slice(1);
+      const tw = ctx.measureText(label).width;
+      legendX -= tw + 4;
+      ctx.fillStyle = mutedColor;
+      ctx.fillText(label, legendX + tw, legendY + 7);
+      legendX -= 10;
+      ctx.fillStyle = severityColors[sev];
+      ctx.beginPath();
+      ctx.arc(legendX + 4, legendY + 4, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+      legendX -= 8;
+    }
+
+    this._trackRender('stackedBarChart', [canvasId, buckets, options]);
+  },
+
   // Risk gauge (semi-circle)
   gauge(canvasId, score) {
     const canvas = document.getElementById(canvasId);

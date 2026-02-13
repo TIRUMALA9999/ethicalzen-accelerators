@@ -76,7 +76,7 @@ const App = {
     }
 
     try {
-      const res = await fetch(`/views/${name}.html`);
+      const res = await fetch(`/views/${name}.html?_=${Date.now()}`);
       if (!res.ok) {
         container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">404</div><div class="empty-state-title">View not found</div></div>`;
         return;

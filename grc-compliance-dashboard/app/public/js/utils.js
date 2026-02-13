@@ -52,7 +52,7 @@ const Utils = {
   scoreBar(score) {
     const pct = Math.min(100, Math.max(0, score * 100));
     const color = score > 0.7 ? 'var(--error)' : score > 0.3 ? 'var(--warning)' : 'var(--success)';
-    return `<div class="violation-score-bar"><div class="violation-score-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
+    return `<div class="violation-score-bar" title="${pct.toFixed(1)}% risk score" style="cursor:pointer"><div class="violation-score-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
   },
 
   syntaxHighlight(json) {

@@ -203,8 +203,13 @@ class CacheStore {
     `);
   }
 
-  cacheViolations(violations) {
+  cacheViolations(violations, opts = {}) {
     if (!this.enabled) return;
+    // When replace is true, clear old cache and replace with cloud data (even if empty)
+    if (opts.replace) {
+      this.db.prepare('DELETE FROM violations').run();
+    }
+    if (violations.length === 0) return;
     const stmt = this.db.prepare(
       'INSERT OR REPLACE INTO violations (id, data, timestamp) VALUES (?, ?, ?)'
     );
@@ -224,8 +229,13 @@ class CacheStore {
     return rows.map(r => JSON.parse(r.data));
   }
 
-  cacheEvidence(records) {
+  cacheEvidence(records, opts = {}) {
     if (!this.enabled) return;
+    // When replace is true, clear old cache and replace with cloud data (even if empty)
+    if (opts.replace) {
+      this.db.prepare('DELETE FROM evidence').run();
+    }
+    if (records.length === 0) return;
     const stmt = this.db.prepare(
       'INSERT OR REPLACE INTO evidence (id, data, timestamp) VALUES (?, ?, ?)'
     );
@@ -284,6 +294,26 @@ class CacheStore {
   clear() {
     if (!this.enabled) return;
     this.db.exec('DELETE FROM violations; DELETE FROM evidence; DELETE FROM exports; DELETE FROM kv;');
+  }
+
+  /**
+   * Remove all demo data (IDs starting with demo_) from violations and evidence.
+   * Called when real tenant data arrives so demo data doesn't mix with live data.
+   */
+  clearDemoData() {
+    if (!this.enabled) return;
+    this.db.prepare("DELETE FROM violations WHERE id LIKE 'demo_%'").run();
+    this.db.prepare("DELETE FROM evidence WHERE id LIKE 'demo_%'").run();
+  }
+
+  /**
+   * Check if real (non-demo) violations or evidence exist in the cache.
+   */
+  hasRealData() {
+    if (!this.enabled) return false;
+    const v = this.db.prepare("SELECT COUNT(*) as c FROM violations WHERE id NOT LIKE 'demo_%'").get();
+    const e = this.db.prepare("SELECT COUNT(*) as c FROM evidence WHERE id NOT LIKE 'demo_%'").get();
+    return (v.c > 0) || (e.c > 0);
   }
 
   seedDemoData() {
