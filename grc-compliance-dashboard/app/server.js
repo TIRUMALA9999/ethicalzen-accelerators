@@ -101,30 +101,27 @@ app.get('/api/grc/violations/stream', (req, res) => {
 
 app.get('/api/grc/violations', async (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
-  const cached = cacheStore.getViolations(limit);
 
-  // If cache has data, serve immediately and refresh in background
-  if (cached.length > 0) {
-    res.json({ violations: cached, source: 'cache', stale: true });
-    apiClient.getViolations(req.query)
-      .then(data => {
-        const v = Array.isArray(data) ? data : (data.violations || []);
-        if (v.length > 0) cacheStore.cacheViolations(v);
-      })
-      .catch(() => {});
-    return;
-  }
-
-  // No cache — must wait for cloud
+  // Merge cloud + local: cloud violations get added to cache, local ones preserved
   try {
     const data = await apiClient.getViolations(req.query);
-    if (Array.isArray(data) || data.violations) {
-      cacheStore.cacheViolations(Array.isArray(data) ? data : data.violations);
+    const cloudViolations = Array.isArray(data) ? data : (data.violations || []);
+    if (cloudViolations.length > 0) {
+      cacheStore.cacheViolations(cloudViolations); // merge, don't replace
     }
-    res.json(data);
-  } catch (err) {
-    res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
+  } catch {
+    // Cloud failed — continue with local cache
   }
+
+  // Serve all violations from cache (cloud + locally recorded)
+  let cached = cacheStore.getViolations(limit);
+  if (cached.length === 0 && !cacheStore.hasRealData()) {
+    // Only seed demo data if NO real tenant data exists anywhere
+    cacheStore.seedDemoData();
+    cached = cacheStore.getViolations(limit);
+  }
+  const source = cached.some(v => v.id && v.id.startsWith('v_')) ? 'live' : 'cache';
+  res.json({ violations: cached, source, total: cached.length });
 });
 
 // =============================================================================
@@ -133,27 +130,27 @@ app.get('/api/grc/violations', async (req, res) => {
 
 app.get('/api/grc/evidence', async (req, res) => {
   const limit = parseInt(req.query.limit) || 100;
-  const cached = cacheStore.getEvidence(limit);
 
-  if (cached.length > 0) {
-    res.json({ evidence: cached, source: 'cache', stale: true });
-    apiClient.getEvidence(req.query)
-      .then(data => {
-        const r = Array.isArray(data) ? data : (data.evidence || data.data || []);
-        if (r.length > 0) cacheStore.cacheEvidence(r);
-      })
-      .catch(() => {});
-    return;
-  }
-
+  // Merge cloud + local: cloud evidence gets added to cache, local ones preserved
   try {
     const data = await apiClient.getEvidence(req.query);
-    const records = Array.isArray(data) ? data : (data.evidence || data.data || []);
-    cacheStore.cacheEvidence(records);
-    res.json(data);
-  } catch (err) {
-    res.status(502).json({ error: 'Cloud API unreachable', message: err.message });
+    const cloudEvidence = Array.isArray(data) ? data : (data.evidence || data.data || []);
+    if (cloudEvidence.length > 0) {
+      cacheStore.cacheEvidence(cloudEvidence); // merge, don't replace
+    }
+  } catch {
+    // Cloud failed — continue with local cache
   }
+
+  // Serve all evidence from cache (cloud + locally recorded)
+  let cached = cacheStore.getEvidence(limit);
+  if (cached.length === 0 && !cacheStore.hasRealData()) {
+    // Only seed demo data if NO real tenant data exists anywhere
+    cacheStore.seedDemoData();
+    cached = cacheStore.getEvidence(limit);
+  }
+  const source = cached.some(e => e.id && e.id.startsWith('e_')) ? 'live' : 'cache';
+  res.json({ evidence: cached, source, total: cached.length });
 });
 
 app.get('/api/grc/evidence/:traceId', async (req, res) => {
@@ -301,6 +298,99 @@ app.get('/api/grc/risk', async (req, res) => {
     res.json(risk);
   } catch (err) {
     res.status(500).json({ error: 'Risk computation failed', message: err.message });
+  }
+});
+
+// =============================================================================
+// Evaluate & Record — Runs guardrail via cloud and records result locally
+// =============================================================================
+
+app.post('/api/grc/evaluate', async (req, res) => {
+  const { input, guardrail_id, contract_id } = req.body;
+  if (!input || !guardrail_id) {
+    return res.status(400).json({ error: 'input and guardrail_id are required' });
+  }
+
+  try {
+    // Call cloud guardrail evaluation
+    const result = await apiClient.request('post', `/api/guardrails/${guardrail_id}/evaluate`, {
+      input,
+      contract_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj'
+    });
+
+    const now = new Date().toISOString();
+    const traceId = `trace_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+    // Clear demo data on first real evaluation — only real tenant data should remain
+    cacheStore.clearDemoData();
+
+    // Record as violation if blocked
+    if (result.blocked) {
+      const violation = {
+        id: `v_${Date.now()}`,
+        trace_id: traceId,
+        contract_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+        violation_type: guardrail_id,
+        severity: result.score >= 0.7 ? 'critical' : result.score >= 0.4 ? 'high' : 'moderate',
+        status: 'blocked',
+        risk_score: result.score.toFixed(4),
+        latency_ms: result.latency_ms || 0,
+        reason: result.reason,
+        timestamp: now
+      };
+      cacheStore.cacheViolations([violation]);
+
+      // Broadcast to SSE clients
+      poller.broadcast('violation', violation);
+      poller.broadcast('stats', { newCount: 1, totalClients: poller.clients.size, lastPoll: now });
+    }
+
+    // Record as evidence
+    const evidence = {
+      id: `e_${Date.now()}`,
+      trace_id: traceId,
+      contract_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+      request_type: 'guardrail_evaluation',
+      guardrail_id,
+      status: result.blocked ? 'blocked' : 'allowed',
+      risk_score: result.score.toFixed(4),
+      latency_ms: result.latency_ms || 0,
+      timestamp: now
+    };
+    cacheStore.cacheEvidence([evidence]);
+
+    // Push evidence to cloud for audit trail persistence
+    const cloudEvidence = {
+      trace_id: traceId,
+      dc_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+      status: result.blocked ? 'blocked' : 'allowed',
+      violations: result.blocked ? [{
+        guardrail_id,
+        violation_type: guardrail_id,
+        severity: result.score >= 0.7 ? 'HIGH' : result.score >= 0.4 ? 'MEDIUM' : 'LOW',
+        score: result.score,
+        reason: result.reason,
+        blocked: true
+      }] : [],
+      evidence: {
+        guardrail_id,
+        evaluation_type: 'guardrail',
+        score: result.score,
+        decision: result.blocked ? 'block' : 'allow',
+        latency_ms: result.latency_ms || 0,
+        timestamp: now
+      }
+    };
+    // Fire-and-forget cloud push (don't block response)
+    apiClient.request('post', '/api/dc/evidence', cloudEvidence).catch(() => {});
+
+    res.json({
+      success: true,
+      evaluation: result,
+      recorded: { violation: result.blocked, evidence: true, trace_id: traceId }
+    });
+  } catch (err) {
+    res.status(502).json({ error: 'Evaluation failed', message: err.message });
   }
 });
 

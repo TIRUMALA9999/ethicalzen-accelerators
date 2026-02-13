@@ -132,7 +132,13 @@ async function init_compliance() {
 
 function switchFramework(fw, el) {
   currentFramework = fw;
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  // Only target tabs inside the framework tab-bar, not other .tab elements on the page
+  const tabBar = el.closest('.tab-bar');
+  if (tabBar) {
+    tabBar.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  } else {
+    document.querySelectorAll('.tab-bar .tab').forEach(t => t.classList.remove('active'));
+  }
   el.classList.add('active');
   // Reset filters when switching tabs
   document.getElementById('c-search').value = '';
@@ -159,7 +165,8 @@ function renderFramework(fw) {
   document.getElementById('c-total').textContent = total;
   document.getElementById('c-last').textContent = Utils.formatDate(new Date().toISOString());
 
-  Charts.donut('c-donut', covered, total, 'var(--primary)');
+  const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#6366f1';
+  Charts.donut('c-donut', covered, total, primaryColor);
   filterControls();
 }
 
@@ -197,4 +204,7 @@ function filterControls() {
     `;
   }).join('');
 }
+
+// Expose to global scope for inline onclick handlers
+window.switchFramework = switchFramework;
 </script>
