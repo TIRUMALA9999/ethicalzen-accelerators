@@ -315,7 +315,7 @@ app.post('/api/grc/evaluate', async (req, res) => {
     // Call cloud guardrail evaluation
     const result = await apiClient.request('post', `/api/guardrails/${guardrail_id}/evaluate`, {
       input,
-      contract_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj'
+      contract_id: contract_id
     });
 
     const now = new Date().toISOString();
@@ -329,7 +329,7 @@ app.post('/api/grc/evaluate', async (req, res) => {
       const violation = {
         id: `v_${Date.now()}`,
         trace_id: traceId,
-        contract_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+        contract_id: contract_id,
         violation_type: guardrail_id,
         severity: result.score >= 0.7 ? 'critical' : result.score >= 0.4 ? 'high' : 'moderate',
         status: 'blocked',
@@ -349,7 +349,7 @@ app.post('/api/grc/evaluate', async (req, res) => {
     const evidence = {
       id: `e_${Date.now()}`,
       trace_id: traceId,
-      contract_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+      contract_id: contract_id,
       request_type: 'guardrail_evaluation',
       guardrail_id,
       status: result.blocked ? 'blocked' : 'allowed',
@@ -362,7 +362,7 @@ app.post('/api/grc/evaluate', async (req, res) => {
     // Push evidence to cloud for audit trail persistence
     const cloudEvidence = {
       trace_id: traceId,
-      dc_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+      dc_id: contract_id,
       status: result.blocked ? 'blocked' : 'allowed',
       violations: result.blocked ? [{
         guardrail_id,
