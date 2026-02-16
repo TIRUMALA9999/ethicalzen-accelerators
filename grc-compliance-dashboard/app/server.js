@@ -362,7 +362,7 @@ app.post('/api/grc/evaluate', async (req, res) => {
     // Push evidence to cloud for audit trail persistence
     const cloudEvidence = {
       trace_id: traceId,
-      dc_id: contract_id || 'dc_tenant_68cc90c8cde9aeda_mlfoveoj',
+      dc_id: contract_id ,
       status: result.blocked ? 'blocked' : 'allowed',
       violations: result.blocked ? [{
         guardrail_id,
